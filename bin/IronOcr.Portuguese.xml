@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IronOcr.Portuguese</name>
+    </assembly>
+    <members>
+        <member name="T:IronOcr.Languages.Portuguese">
+            <summary>
+              Portuguese (Português) Language Pack for IronOcr.  Support European and Brazilian Portuguese dialects.
+              <para> Requires IronOcr to be of value http://ironsoftware.com/csharp/ocr/ </para>
+              <example><code>IronOcr.Language = IronOcr.Languages.Portuguese.OcrLanguagePack</code></example>
+            </summary>
+        </member>
+        <member name="P:IronOcr.Languages.Portuguese.LanguageCode">
+            <exclude />
+        </member>
+        <member name="M:IronOcr.Languages.Portuguese.Deploy(System.String)">
+            <exclude />
+        </member>
+        <member name="M:IronOcr.Languages.Portuguese.ToString">
+            <exclude />
+        </member>
+        <member name="P:IronOcr.Languages.Portuguese.OcrLanguagePack">
+            Portuguese (por) Language pack covering  both European and Brazilian Portuguese dialects
+        </member>
+    </members>
+</doc>
