@@ -11,8 +11,11 @@ namespace API.Controllers
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class HomeController : Controller
     {
+        //[HttpPost]
         public string ProcessarImagem(string img)
         {
+            if (Request.HttpMethod != "POST") throw new Exception("Ainda não é POST... Tenta de novo! :)");
+
             try
             {
                 //var imgEnhanced = EnhanceImage(Request.InputStream);
