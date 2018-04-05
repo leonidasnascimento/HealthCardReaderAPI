@@ -3,6 +3,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
 
@@ -11,24 +12,24 @@ namespace API.Controllers
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class HomeController : Controller
     {
-        //[HttpPost]
-        public string ProcessarImagem(string img)
+        [HttpPost]
+        public string ProcessarImagemAsync()
         {
-            if (Request.HttpMethod != "POST") throw new Exception("Ainda não é POST... Tenta de novo! :)");
-
+            
             try
             {
-                //var imgEnhanced = EnhanceImage(Request.InputStream);
-                //var readData = await ImageOCRAsync(new MemoryStream(imgEnhanced));
-                //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(readData, System.Text.Encoding.UTF8, "application/json") };
-
-                return "Alô, mundo!";
+                var imgEnhanced = EnhanceImage(Request.InputStream);
+                var readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
+                
+                return readData.Result;
             }
             catch (Exception ex)
             {
                 return ex.Message;
             }
+
         }
+          
 
         /// <summary>
         /// Method user for image enhancement

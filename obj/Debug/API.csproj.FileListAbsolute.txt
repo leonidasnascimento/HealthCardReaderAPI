@@ -230,3 +230,11 @@ C:\git\HealthCardReader\API\obj\Debug\API.csprojResolveAssemblyReference.cache
 C:\git\HealthCardReader\API\obj\Debug\API.csproj.CoreCompileInputs.cache
 C:\git\HealthCardReader\API\obj\Debug\API.dll
 C:\git\HealthCardReader\API\obj\Debug\API.pdb
+C:\git\HealthCare Readers\HealthCardReaderAPI\bin\ApplicationInsights.config
+C:\git\HealthCare Readers\HealthCardReaderAPI\bin\API.dll.config
+C:\git\HealthCare Readers\HealthCardReaderAPI\bin\API.dll
+C:\git\HealthCare Readers\HealthCardReaderAPI\bin\API.pdb
+C:\git\HealthCare Readers\HealthCardReaderAPI\obj\Debug\API.csprojResolveAssemblyReference.cache
+C:\git\HealthCare Readers\HealthCardReaderAPI\obj\Debug\API.csproj.CoreCompileInputs.cache
+C:\git\HealthCare Readers\HealthCardReaderAPI\obj\Debug\API.dll
+C:\git\HealthCare Readers\HealthCardReaderAPI\obj\Debug\API.pdb
