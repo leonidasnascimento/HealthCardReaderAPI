@@ -7,31 +7,28 @@ using System.Threading.Tasks;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
 
+
 namespace API.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class HomeController : Controller
     {
+
         [HttpPost]
         public string ProcessarImagemAsync(string image)
-        {
+         {
             //'InputStram' validations
             if (string.IsNullOrWhiteSpace(image))
-                return "There's no image on the 'image' parameter... Please try again sending a valid image format.";
-
+                return "There's no image on the 'image' parameter... Please try again sending a valid image format."; 
+                
             try
             {
                 var imgEnhanced = default(byte[]);
                 var readData = default(Task<string>);
                 var bytes = Convert.FromBase64String(image);
 
-                using (var memory = new MemoryStream())
-                {
-                    memory.Write(bytes, 0, bytes.Length);
-
-                    imgEnhanced = EnhanceImage(memory);
-                    readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
-                }
+                imgEnhanced = EnhanceImage(bytes);
+                readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
 
                 if (!(readData is null))
                     return readData.Result;
@@ -45,15 +42,17 @@ namespace API.Controllers
 
         }
 
-
+        
         /// <summary>
         /// Method user for image enhancement
         /// </summary>
         /// <param name="inputStream">Image input stream</param>
         /// <returns>Byte array on an enhanced image</returns>
-        private byte[] EnhanceImage(Stream inputStream)
+        private byte[] EnhanceImage(byte[] input)
         {
-            using (MagickImage image = new MagickImage(inputStream))
+            if (input is null) return null;
+
+            using (MagickImage image = new MagickImage(input))
             {
                 image.Grayscale(PixelIntensityMethod.Average); //Turned it to black and white
                 image.Contrast(true); //Turned up the contrast
