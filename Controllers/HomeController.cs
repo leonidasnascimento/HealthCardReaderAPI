@@ -3,7 +3,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Net.Http;
-using System.Text;
+using System.Threading.Tasks;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
 
@@ -13,15 +13,30 @@ namespace API.Controllers
     public class HomeController : Controller
     {
         [HttpPost]
-        public string ProcessarImagemAsync()
+        public string ProcessarImagemAsync(string image)
         {
-            
+            //'InputStram' validations
+            if (string.IsNullOrWhiteSpace(image))
+                return "There's no image on the 'image' parameter... Please try again sending a valid image format.";
+
             try
             {
-                var imgEnhanced = EnhanceImage(Request.InputStream);
-                var readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
-                
-                return readData.Result;
+                var imgEnhanced = default(byte[]);
+                var readData = default(Task<string>);
+                var bytes = Convert.FromBase64String(image);
+
+                using (var memory = new MemoryStream())
+                {
+                    memory.Write(bytes, 0, bytes.Length);
+
+                    imgEnhanced = EnhanceImage(memory);
+                    readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
+                }
+
+                if (!(readData is null))
+                    return readData.Result;
+                else
+                    return "There's no processed data to read!";
             }
             catch (Exception ex)
             {
@@ -29,7 +44,7 @@ namespace API.Controllers
             }
 
         }
-          
+
 
         /// <summary>
         /// Method user for image enhancement
@@ -67,7 +82,7 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Send a stram (image) to the cloud for computer vision processing & optical charactere recogniton (OCR)
+        /// Send a stram (image) to the clo\ud for computer vision processing & optical charactere recogniton (OCR)
         /// </summary>
         /// <param name="imgStream">Image in stream</param>
         /// <returns></returns>
