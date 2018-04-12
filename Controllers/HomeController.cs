@@ -3,6 +3,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
@@ -24,14 +25,14 @@ namespace API.Controllers
             try
             {
                 var imgEnhanced = default(byte[]);
-                var readData = default(Task<string>);
+                var readData = default(string);
                 var bytes = Convert.FromBase64String(image);
 
                 imgEnhanced = EnhanceImage(bytes);
-                readData = ImageOCRAsync(new MemoryStream(imgEnhanced));
+                readData = ImageOCRAsync(imgEnhanced);
 
-                if (!(readData is null))
-                    return readData.Result;
+                if (!string.IsNullOrWhiteSpace(readData))
+                    return readData;
                 else
                     return "There's no processed data to read!";
             }
@@ -54,12 +55,12 @@ namespace API.Controllers
 
             using (MagickImage image = new MagickImage(input))
             {
-                image.Grayscale(PixelIntensityMethod.Average); //Turned it to black and white
-                image.Contrast(true); //Turned up the contrast
-                image.Negate(); //Inverted back and white
+                //image.Grayscale(PixelIntensityMethod.Average); //Turned it to black and white
+                //image.Contrast(true); //Turned up the contrast
+                //image.Negate(); //Inverted back and white
 
                 //Chcking if the image was correctly adjusted according to the steps above
-                SaveImageForVisualValidation(image);
+                //SaveImageForVisualValidation(image);
 
                 return image.ToByteArray(MagickFormat.Jpg);
             }
@@ -71,7 +72,9 @@ namespace API.Controllers
         /// <param name="image">Image</param>
         private static void SaveImageForVisualValidation(MagickImage image)
         {
-            var path = Path.Combine(ConfigurationManager.AppSettings["PATH_FOR_VISUAL_VALIDATION"], "TesteImg.jpg");
+            var appBase = AppContext.BaseDirectory;
+            var dirName = Path.GetDirectoryName(appBase);
+            var path = Path.Combine(dirName, "TesteImg.jpg");
 
             if (System.IO.File.Exists(path))
                 System.IO.File.Delete(path);
@@ -85,28 +88,20 @@ namespace API.Controllers
         /// </summary>
         /// <param name="imgStream">Image in stream</param>
         /// <returns></returns>
-        private async System.Threading.Tasks.Task<string> ImageOCRAsync(Stream imgStream)
-        {
-            var contentArray = default(byte[]);
-
-            using (var ms = new MemoryStream())
-            {
-                imgStream.CopyTo(ms);
-                contentArray = ms.ToArray();
-            }
-
+        private string ImageOCRAsync(byte[] imgStream)
+        { 
             var compVisionUrl = ConfigurationManager.AppSettings["COMPUTER_VISION_URL"];
             var defaultLang = ConfigurationManager.AppSettings["COMPUTER_VISION_DEFAULT_LANGUAGE"];
             var cvSubscriptionKey = ConfigurationManager.AppSettings["COMPUTER_VISION_SUBSCRIPTION_KEY"];
             var client = new HttpClient();
-            var fullUrl = string.Format(compVisionUrl, string.Format("language={0}&detectOrientation=true", defaultLang));
-            var byteContent = new ByteArrayContent(contentArray);
+            var fullUrl = string.Format(compVisionUrl, string.Format("language={0}&detectOrientation=false", defaultLang));
+            var byteContent = new ByteArrayContent(imgStream);
 
             byteContent.Headers.Add("Content-Type", "application/octet-stream");
             byteContent.Headers.Add("Ocp-Apim-Subscription-Key", cvSubscriptionKey);
 
-            var response = await client.PostAsync(fullUrl, byteContent);
-            var responseString = await response.Content.ReadAsStringAsync();
+            var response = client.PostAsync(fullUrl, byteContent).Result;
+            var responseString = response.Content.ReadAsStringAsync().Result;
 
             return responseString;
         }
