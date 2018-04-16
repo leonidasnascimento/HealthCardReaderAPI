@@ -37,9 +37,6 @@ namespace API.Models
         /// </summary>
         public string Company { get; protected set; }
 
-        public string json { get; protected set; }
-
-
         public abstract HealthCard ReadCardInfo(string json);
 
         }

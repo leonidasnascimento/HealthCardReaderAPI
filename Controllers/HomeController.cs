@@ -3,8 +3,6 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
 

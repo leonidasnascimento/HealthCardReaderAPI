@@ -212,7 +212,6 @@
     <Compile Include="Models\HealthCard.cs" />
     <Compile Include="Models\SulAmerica.cs" />
     <Compile Include="Patterns\HealthCardStrategy.cs" />
-    <Compile Include="Patterns\Strategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
