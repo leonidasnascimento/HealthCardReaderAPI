@@ -1,10 +1,11 @@
-﻿using System;
+﻿using API.Patterns;
+using System;
 using System.Drawing;
 
 namespace API.Models
 {
     /// <summary>
-    /// the class HealthCare is responsible for establishing the atributes that is commom for all the health cards
+    /// the class HealthCare is responsible for establishing the atributes that are commom for all the health cards
     /// </summary>
     public abstract class HealthCard
     {
@@ -38,6 +39,5 @@ namespace API.Models
         public string Company { get; protected set; }
 
         public abstract HealthCard ReadCardInfo(string json);
-
-        }
     }
+}

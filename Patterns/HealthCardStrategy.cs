@@ -1,21 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace API.Patterns
+﻿namespace API.Patterns
 {
     /// <summary>
     /// 
     /// </summary>
-    public class HealthCardStrategy
+    public abstract class HealthCardStrategy : Models.HealthCard
     {
-        //public Models.HealthCard Strategy
+        public HealthCardStrategy(string ModelCard)
+        {
+#pragma warning disable CS0184 // 'is' expression's given expression is never of the provided type
+            if (ModelCard is Models.Bradesco)
+#pragma warning restore CS0184 // 'is' expression's given expression is never of the provided type
+            {
+                System.Console.WriteLine("É Bradesco!");
+            }
+            else
+            { 
+                System.Console.WriteLine("Não é Bradesco");
+            }
+        }
+
+        //public override Models.HealthCard ReadCardInfo(string json)
         //{
-        //    get
+        //    if(json is null)
         //    {
-        //        Strategy strategy = new Strategy();
+        //        System.Console.WriteLine("Json é nulo");
         //    }
         //}
+
+        private Models.HealthCard _healthCard { get; set; }
+
     }
+ 
 }
