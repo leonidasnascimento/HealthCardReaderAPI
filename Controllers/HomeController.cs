@@ -1,4 +1,7 @@
-﻿using ImageMagick;
+﻿using API.Models;
+using API.Patterns;
+using ImageMagick;
+using Microsoft.Ajax.Utilities;
 using System;
 using System.Configuration;
 using System.IO;
@@ -13,34 +16,55 @@ namespace API.Controllers
     public class HomeController : Controller
     {
 
+
         [HttpPost]
-        public string ProcessarImagemAsync(string image)
-         {
+        public string ProcessarImagemAsync(string image, string operadora)
+        {
             //'InputStram' validations
             if (string.IsNullOrWhiteSpace(image))
-                return "There's no image on the 'image' parameter... Please try again sending a valid image format."; 
-                
+                return "There's no image on the 'image' parameter... Please try again sending a valid image format.";
+
             try
             {
                 var imgEnhanced = default(byte[]);
                 var readData = default(string);
                 var bytes = Convert.FromBase64String(image);
-
+                var healthCardReader = default(HealthCard);
+                var healthCardInfo = default(HealthCard);
+               
+                
                 imgEnhanced = EnhanceImage(bytes);
                 readData = ImageOCRAsync(imgEnhanced);
+                healthCardReader = new HealthCardStrategy().GetHealthCardInstance("BRADESCO");
+
+                healthCardInfo = healthCardReader.ReadCardInfo(readData);
 
                 if (!string.IsNullOrWhiteSpace(readData))
-                    return readData;
-                else
+                { 
+                                               
                     return "There's no processed data to read!";
+                }
+                if (!string.IsNullOrWhiteSpace(operadora))
+                {
+                    return operadora;
+                }
+                else
+                {
+                    return "There's no processed data to read!";
+                }
+                
             }
+
+
             catch (Exception ex)
             {
                 return ex.Message;
             }
 
-        }
 
+        }
+        
+        
         
         /// <summary>
         /// Method user for image enhancement

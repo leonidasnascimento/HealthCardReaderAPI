@@ -1,34 +1,37 @@
-﻿namespace API.Patterns
+﻿using API.Models;
+using System.Diagnostics;
+
+namespace API.Patterns
 {
     /// <summary>
     /// 
     /// </summary>
-    public abstract class HealthCardStrategy : Models.HealthCard
+    public class HealthCardStrategy
     {
-        public HealthCardStrategy(string ModelCard)
+        public HealthCard GetHealthCardInstance(string operadora)
         {
-#pragma warning disable CS0184 // 'is' expression's given expression is never of the provided type
-            if (ModelCard is Models.Bradesco)
-#pragma warning restore CS0184 // 'is' expression's given expression is never of the provided type
+            if ("bradesco".Equals(operadora.ToLowerInvariant()))
             {
-                System.Console.WriteLine("É Bradesco!");
+                Debug.WriteLine("É Bradesco!");
+
+                return new Bradesco();
             }
             else
-            { 
-                System.Console.WriteLine("Não é Bradesco");
+            {
+                Debug.WriteLine("Não é Bradesco");
+
+                return null;
             }
         }
 
-        //public override Models.HealthCard ReadCardInfo(string json)
-        //{
-        //    if(json is null)
-        //    {
-        //        System.Console.WriteLine("Json é nulo");
-        //    }
-        //}
+        public string operadora;
 
-        private Models.HealthCard _healthCard { get; set; }
-
+        public string Operadora
+        {
+            get { return operadora; }
+            set { operadora = value;  }
+        }
     }
+    
  
 }
