@@ -18,7 +18,7 @@ namespace API.Controllers
 
 
         [HttpPost]
-        public string ProcessarImagemAsync(string image, string operadora)
+        public string ProcessarImagemAsync(string image)
         {
             //'InputStram' validations
             if (string.IsNullOrWhiteSpace(image))
@@ -31,28 +31,30 @@ namespace API.Controllers
                 var bytes = Convert.FromBase64String(image);
                 var healthCardReader = default(HealthCard);
                 var healthCardInfo = default(HealthCard);
-               
-                
+                var healthProvider = string.Empty;
+
+
                 imgEnhanced = EnhanceImage(bytes);
                 readData = ImageOCRAsync(imgEnhanced);
-                healthCardReader = new HealthCardStrategy().GetHealthCardInstance("BRADESCO");
+                healthProvider = ChooseCredentials(readData);
+                healthCardReader = new HealthCardStrategy().GetHealthCardInstance(healthProvider);
 
                 healthCardInfo = healthCardReader.ReadCardInfo(readData);
 
                 if (!string.IsNullOrWhiteSpace(readData))
-                { 
-                                               
+                {
+
                     return "There's no processed data to read!";
                 }
-                if (!string.IsNullOrWhiteSpace(operadora))
-                {
-                    return operadora;
-                }
+                //if (!string.IsNullOrWhiteSpace(operadora))
+                //{
+                //    return operadora;
+                //}
                 else
                 {
                     return "There's no processed data to read!";
                 }
-                
+
             }
 
 
@@ -60,12 +62,27 @@ namespace API.Controllers
             {
                 return ex.Message;
             }
-
-
         }
-        
-        
-        
+
+        private string ChooseCredentials(string readData)
+        {
+            var acceptedHealthProviders = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"];
+            var arrHealthProviders = acceptedHealthProviders.Split(',');
+
+            for (int i = 0; i <= arrHealthProviders.Length; i++)
+            {
+                if (readData.Contains(arrHealthProviders[i]))
+                {
+                    return healthProvider;
+
+                }
+            }
+            return null;
+        }
+    
+
+
+
         /// <summary>
         /// Method user for image enhancement
         /// </summary>
@@ -111,7 +128,7 @@ namespace API.Controllers
         /// <param name="imgStream">Image in stream</param>
         /// <returns></returns>
         private string ImageOCRAsync(byte[] imgStream)
-        { 
+        {
             var compVisionUrl = ConfigurationManager.AppSettings["COMPUTER_VISION_URL"];
             var defaultLang = ConfigurationManager.AppSettings["COMPUTER_VISION_DEFAULT_LANGUAGE"];
             var cvSubscriptionKey = ConfigurationManager.AppSettings["COMPUTER_VISION_SUBSCRIPTION_KEY"];
