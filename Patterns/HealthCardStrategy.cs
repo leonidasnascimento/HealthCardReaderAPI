@@ -29,9 +29,9 @@ namespace API.Patterns
         public string Operadora
         {
             get { return operadora; }
-            set { operadora = value;  }
+            set { operadora = value; }
         }
     }
-    
- 
+
+
 }

@@ -4,7 +4,9 @@ using ImageMagick;
 using Microsoft.Ajax.Utilities;
 using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
@@ -41,10 +43,9 @@ namespace API.Controllers
 
                 healthCardInfo = healthCardReader.ReadCardInfo(readData);
 
-                if (!string.IsNullOrWhiteSpace(readData))
+                if (string.IsNullOrWhiteSpace(readData))
                 {
-
-                    return "There's no processed data to read!";
+                    return "There's no processed data to read!!";
                 }
                 //if (!string.IsNullOrWhiteSpace(operadora))
                 //{
@@ -52,32 +53,53 @@ namespace API.Controllers
                 //}
                 else
                 {
-                    return "There's no processed data to read!";
+                    return "There's no processed data to read";
                 }
-
             }
-
-
+            
             catch (Exception ex)
             {
                 return ex.Message;
             }
         }
-
+                
         private string ChooseCredentials(string readData)
         {
             var acceptedHealthProviders = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"];
             var arrHealthProviders = acceptedHealthProviders.Split(',');
 
-            for (int i = 0; i <= arrHealthProviders.Length; i++)
-            {
-                if (readData.Contains(arrHealthProviders[i]))
-                {
-                    return healthProvider;
+                if (string.IsNullOrWhiteSpace(readData))
+                    Debug.WriteLine("There's no processed data to read!");
+                
+                if (string.IsNullOrWhiteSpace(acceptedHealthProviders))
+                    Debug.WriteLine("AcceptedHealthProviders is null!");
+                
+                if (string.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"]))
+                    Debug.WriteLine("AppSettings is null!");
 
+               
+            try
+            {
+                for (int i = 0; i < arrHealthProviders.Length; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(arrHealthProviders[i]))
+                        Debug.WriteLine("arrHealthProviders is null!");
+
+                    if (readData.Contains(arrHealthProviders[i]))
+                    {
+                        return arrHealthProviders[i];
+                    }
                 }
             }
+
+            catch (Exception exs)
+            {
+                return exs.Message;
+            }
+
             return null;
+
+
         }
     
 
