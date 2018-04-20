@@ -8,12 +8,17 @@ namespace API.Patterns
     /// </summary>
     public class HealthCardStrategy
     {
-        public HealthCard GetHealthCardInstance(string operadora)
+        public HealthCardInfo GetHealthCardInstance(string operadora)
         {
+            if (string.IsNullOrWhiteSpace(operadora))
+            {
+                Debug.WriteLine("operadora is null!");
+                return null;
+            }
+
             if ("bradesco".Equals(operadora.ToLowerInvariant()))
             {
                 Debug.WriteLine("É Bradesco!");
-
                 return new Bradesco();
             }
             else
@@ -22,16 +27,6 @@ namespace API.Patterns
 
                 return null;
             }
-        }
-
-        public string operadora;
-
-        public string Operadora
-        {
-            get { return operadora; }
-            set { operadora = value; }
-        }
-    }
-
-
+        }               
+    }    
 }

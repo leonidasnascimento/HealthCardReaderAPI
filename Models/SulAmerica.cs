@@ -3,9 +3,9 @@
 
 namespace API.Models
 {
-    public class SulAmerica : HealthCard
+    public class SulAmerica : HealthCardInfo
     { 
-        public override HealthCard ReadCardInfo(string json)
+        public override HealthCardInfo ReadCardInfo(string json)
         {
             throw new NotImplementedException();
         }

@@ -31,8 +31,8 @@ namespace API.Controllers
                 var imgEnhanced = default(byte[]);
                 var readData = default(string);
                 var bytes = Convert.FromBase64String(image);
-                var healthCardReader = default(HealthCard);
-                var healthCardInfo = default(HealthCard);
+                var healthCardReader = default(HealthCardInfo);
+                var healthCardInfo = default(HealthCardInfo);
                 var healthProvider = string.Empty;
 
 
@@ -68,24 +68,37 @@ namespace API.Controllers
             var acceptedHealthProviders = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"];
             var arrHealthProviders = acceptedHealthProviders.Split(',');
 
-                if (string.IsNullOrWhiteSpace(readData))
-                    Debug.WriteLine("There's no processed data to read!");
+            if (string.IsNullOrWhiteSpace(readData))
+            {
+                Debug.WriteLine("There's no processed data to read!");
+                return string.Empty;
+            }
                 
-                if (string.IsNullOrWhiteSpace(acceptedHealthProviders))
-                    Debug.WriteLine("AcceptedHealthProviders is null!");
+            if (string.IsNullOrWhiteSpace(acceptedHealthProviders))
+            {
+                Debug.WriteLine("AcceptedHealthProviders is null!");
+                return string.Empty;                
+            }
+                    
                 
-                if (string.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"]))
-                    Debug.WriteLine("AppSettings is null!");
+            if (string.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"]))
+            {
+                Debug.WriteLine("AppSettings is null!");
+                return string.Empty;
+            }
+                    
 
-               
             try
             {
                 for (int i = 0; i < arrHealthProviders.Length; i++)
                 {
                     if (string.IsNullOrWhiteSpace(arrHealthProviders[i]))
+                    {
                         Debug.WriteLine("arrHealthProviders is null!");
+                        return string.Empty;
+                    }
 
-                    if (readData.Contains(arrHealthProviders[i]))
+                    if (readData.ToLowerInvariant().Contains(arrHealthProviders[i]))
                     {
                         return arrHealthProviders[i];
                     }

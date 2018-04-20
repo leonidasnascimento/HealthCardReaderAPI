@@ -3,9 +3,9 @@
 
 namespace API.Models
 {
-    public class Bradesco : HealthCard
+    public class Bradesco : HealthCardInfo
     {
-        public override HealthCard ReadCardInfo(string json)
+        public override HealthCardInfo ReadCardInfo(string json)
         {
             throw new NotImplementedException();
         }
