@@ -1,23 +1,20 @@
 ﻿using API.Models;
 using API.Patterns;
 using ImageMagick;
-using Microsoft.Ajax.Utilities;
 using System;
 using System.Configuration;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
 
-
 namespace API.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class HomeController : Controller
     {
-
+        #region HTTP Methods
 
         [HttpPost]
         public string ProcessarImagemAsync(string image)
@@ -26,119 +23,41 @@ namespace API.Controllers
             if (string.IsNullOrWhiteSpace(image))
                 return "There's no image on the 'image' parameter... Please try again sending a valid image format.";
 
+            if (!ConfigurationManager.AppSettings.AllKeys.Contains("ACCEPTED_HEALTH_PROVIDERS"))
+                return "No allowed health care provider found in configurations. Please, contact your system administrator.";
+
             try
             {
-                var imgEnhanced = default(byte[]);
                 var readData = default(string);
                 var bytes = Convert.FromBase64String(image);
-                var healthCardReader = default(HealthCardInfo);
+                var healthCardReader = default(HealthCardReader);
                 var healthCardInfo = default(HealthCardInfo);
-                var healthProvider = string.Empty;
+                var healthCareProviderList = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"].Split(',').ToList();
 
+                readData = ImageOCRAsync(bytes);
+                healthCardReader = new HealthCardReaderStrategy().GetHealthCardInstance(readData, healthCareProviderList);
 
-                imgEnhanced = EnhanceImage(bytes);
-                readData = ImageOCRAsync(imgEnhanced);
-                healthProvider = ChooseCredentials(readData);
-                healthCardReader = new HealthCardStrategy().GetHealthCardInstance(healthProvider);
+                if (!(healthCardReader is null)) //Getting the "first" health card informations
+                    healthCardInfo = healthCardReader.ReadCardInfo(readData);
 
-                healthCardInfo = healthCardReader.ReadCardInfo(readData);
+                if (!(healthCardInfo is null)) //Getting the elegibility for a medical exam & hospital
+                    healthCardInfo.AddEligibility(healthCardReader.GetHealthCarePlanElegibility(healthCardInfo, "HIAE", string.Empty));
 
-                if (string.IsNullOrWhiteSpace(readData))
-                {
-                    return "There's no processed data to read!!";
-                }
-                //if (!string.IsNullOrWhiteSpace(operadora))
-                //{
-                //    return operadora;
-                //}
+                if (!(healthCardInfo is null))
+                    return Newtonsoft.Json.JsonConvert.SerializeObject(healthCardInfo);
                 else
-                {
-                    return "There's no processed data to read";
-                }
+                    return "No data found from the given Health Card";
             }
-            
+
             catch (Exception ex)
             {
                 return ex.Message;
             }
         }
-                
-        private string ChooseCredentials(string readData)
-        {
-            var acceptedHealthProviders = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"];
-            var arrHealthProviders = acceptedHealthProviders.Split(',');
 
-            if (string.IsNullOrWhiteSpace(readData))
-            {
-                Debug.WriteLine("There's no processed data to read!");
-                return string.Empty;
-            }
-                
-            if (string.IsNullOrWhiteSpace(acceptedHealthProviders))
-            {
-                Debug.WriteLine("AcceptedHealthProviders is null!");
-                return string.Empty;                
-            }
-                    
-                
-            if (string.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"]))
-            {
-                Debug.WriteLine("AppSettings is null!");
-                return string.Empty;
-            }
-                    
+        #endregion HTTP Methods
 
-            try
-            {
-                for (int i = 0; i < arrHealthProviders.Length; i++)
-                {
-                    if (string.IsNullOrWhiteSpace(arrHealthProviders[i]))
-                    {
-                        Debug.WriteLine("arrHealthProviders is null!");
-                        return string.Empty;
-                    }
-
-                    if (readData.ToLowerInvariant().Contains(arrHealthProviders[i]))
-                    {
-                        return arrHealthProviders[i];
-                    }
-                }
-            }
-
-            catch (Exception exs)
-            {
-                return exs.Message;
-            }
-
-            return null;
-
-
-        }
-    
-
-
-
-        /// <summary>
-        /// Method user for image enhancement
-        /// </summary>
-        /// <param name="inputStream">Image input stream</param>
-        /// <returns>Byte array on an enhanced image</returns>
-        private byte[] EnhanceImage(byte[] input)
-        {
-            if (input is null) return null;
-
-            using (MagickImage image = new MagickImage(input))
-            {
-                //image.Grayscale(PixelIntensityMethod.Average); //Turned it to black and white
-                //image.Contrast(true); //Turned up the contrast
-                //image.Negate(); //Inverted back and white
-
-                //Chcking if the image was correctly adjusted according to the steps above
-                //SaveImageForVisualValidation(image);
-
-                return image.ToByteArray(MagickFormat.Jpg);
-            }
-        }
+        #region Private Methods
 
         /// <summary>
         /// Method used for save image for visual validation
@@ -179,5 +98,7 @@ namespace API.Controllers
 
             return responseString;
         }
+
+        #endregion Private Methods
     }
 }

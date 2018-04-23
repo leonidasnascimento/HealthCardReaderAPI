@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Web;
 
 namespace API.Models
 {
@@ -37,6 +35,25 @@ namespace API.Models
         /// </summary>
         public string Company { get; protected set; }
 
-        public abstract HealthCardInfo ReadCardInfo(string json);
+        /// <summary>
+        /// List of Eligibities
+        /// </summary>
+        public List<EligibilityInfo> Eligibilities { get; protected set; }
+
+        #region Methods
+
+        /// <summary>
+        /// Adds instance of Eligibility to the list
+        /// </summary>
+        /// <param name="eligibility">Eligibility</param>
+        public void AddEligibility(EligibilityInfo eligibility)
+        {
+            if (Eligibilities is null)
+                Eligibilities = new List<EligibilityInfo>();
+
+            Eligibilities.Add(eligibility);
+        }
+
+        #endregion Methods
     }
 }
