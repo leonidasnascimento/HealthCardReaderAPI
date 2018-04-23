@@ -33,6 +33,7 @@ namespace API.Controllers
                 var healthCardReader = default(HealthCardReader);
                 var healthCardInfo = default(HealthCardInfo);
                 var healthCareProviderList = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"].Split(',').ToList();
+                
 
                 readData = ImageOCRAsync(bytes);
                 healthCardReader = new HealthCardReaderStrategy().GetHealthCardInstance(readData, healthCareProviderList);
@@ -45,6 +46,9 @@ namespace API.Controllers
 
                 if (!(healthCardInfo is null))
                     return Newtonsoft.Json.JsonConvert.SerializeObject(healthCardInfo);
+
+
+
                 else
                     return "No data found from the given Health Card";
             }

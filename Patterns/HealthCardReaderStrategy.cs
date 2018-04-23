@@ -38,6 +38,8 @@ namespace API.Patterns
                     return new Bradesco();
                 case "sulamerica":
                 case "sulamérica":
+                case "sul américa":
+                case "sul america":
                     return new SulAmerica();
                 default:
                     return null;

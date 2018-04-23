@@ -209,10 +209,11 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Bradesco.cs" />
+    <Compile Include="Models\EligibilityInfo.cs" />
     <Compile Include="Models\HealthCardReader.cs" />
     <Compile Include="Models\HealthCardInfo.cs" />
     <Compile Include="Models\SulAmerica.cs" />
-    <Compile Include="Patterns\HealthCardStrategy.cs" />
+    <Compile Include="Patterns\HealthCardReaderStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

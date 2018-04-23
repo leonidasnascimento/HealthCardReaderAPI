@@ -4,44 +4,45 @@ using System.Drawing;
 
 namespace API.Models
 {
-    public abstract class HealthCardInfo
+    public class HealthCardInfo
     {
         /// <summary>
         /// Name represents the healthcard's owner
         /// </summary>
-        public string Name { get; protected set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// CardNumber representes the number of the card
         /// </summary>
-        public string CardNumber { get; protected set; }
+        public string CardNumber { get; set; }
 
         /// <summary>
         /// ValidDate represents the last date the card will be valid
         /// </summary>
-        public DateTime ValidDate { get; protected set; }
+
+        public DateTime ValidDate { get; set; } 
 
         /// <summary>
         /// HealthInsurance represents the type of the Health Insurance
         /// </summary>
-        public string HealthInsurance { get; protected set; }
+        public string HealthInsurance { get; set; }
 
         /// <summary>
         /// Logo represents which is the medical agreement of the card
         /// </summary>
-        public Image Logo { get; protected set; }
+        public Image Logo { get; set; }
         /// <summary>
         /// Company represents the company in which the owner of the card works
         /// </summary>
-        public string Company { get; protected set; }
+        public string Company { get; set; }
 
         /// <summary>
         /// List of Eligibities
         /// </summary>
-        public List<EligibilityInfo> Eligibilities { get; protected set; }
+        public List<EligibilityInfo> Eligibilities { get; set; }
 
         #region Methods
-
+            
         /// <summary>
         /// Adds instance of Eligibility to the list
         /// </summary>
