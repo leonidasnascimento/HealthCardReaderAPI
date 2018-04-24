@@ -209,6 +209,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Bradesco.cs" />
+    <Compile Include="Models\ComputerVisionOCR.cs" />
     <Compile Include="Models\EligibilityInfo.cs" />
     <Compile Include="Models\HealthCardReader.cs" />
     <Compile Include="Models\HealthCardInfo.cs" />
