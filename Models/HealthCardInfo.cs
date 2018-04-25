@@ -20,7 +20,7 @@ namespace API.Models
         /// ValidDate represents the last date the card will be valid
         /// </summary>
 
-        public DateTime ValidDate { get; set; }
+        public DateTime? ValidDate { get; set; }
         
         /// <summary>
         /// HealthInsurance represents the type of the Health Insurance
@@ -30,7 +30,7 @@ namespace API.Models
         /// <summary>
         /// Logo represents which is the medical agreement of the card
         /// </summary>
-        public Image Logo { get; set; }
+        public string Logo { get; set; }
         /// <summary>
         /// Company represents the company in which the owner of the card works
         /// </summary>

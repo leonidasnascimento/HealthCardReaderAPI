@@ -11,42 +11,72 @@ namespace API.Models
 
         public override HealthCardInfo ReadCardInfo(string json)
         {
-            var teste = (ComputerVisionOCR) Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
-            
-        
+            var CardsInfoPosition = (ComputerVisionOCR)Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
+            var nameAux = string.Empty;
+            var cardnumberAux = string.Empty;
+            var validdateAux = string.Empty;
+            var logoAux = string.Empty;
+            var companyAux = string.Empty;
+
+            //Filling 'nameAux'
+            if (CardsInfoPosition.regions.Count >= 2 &&
+                CardsInfoPosition.regions[0].lines.Count >= 2 &&
+                CardsInfoPosition.regions[1].lines.Count >= 4 &&
+                CardsInfoPosition.regions[0].lines[1].words.Count >= 2 &&
+                CardsInfoPosition.regions[1].lines[3].words.Count >= 1)
+            {
+                nameAux = CardsInfoPosition.regions[0].lines[1].words[0].text + " " +
+                          CardsInfoPosition.regions[0].lines[1].words[1].text + " " +
+                          CardsInfoPosition.regions[1].lines[3].words[0].text;
+            }
+
+            //Filling 'cardnumberAux'
+            if ( CardsInfoPosition.regions.Count >= 2 &&
+                CardsInfoPosition.regions[0].lines.Count >= 3 &&
+                CardsInfoPosition.regions[1].lines.Count >= 5 &&
+                CardsInfoPosition.regions[0].lines[2].words.Count >= 2 &&
+                CardsInfoPosition.regions[1].lines[4].words.Count >= 2)
+            {
+                cardnumberAux = CardsInfoPosition.regions[0].lines[2].words[0].text + " " +
+                                CardsInfoPosition.regions[0].lines[2].words[1].text + " " +
+                                CardsInfoPosition.regions[1].lines[4].words[0].text + " " +
+                                CardsInfoPosition.regions[1].lines[4].words[1].text;
+            }
+
+            //Filling 'validdateAux'
+            if ( CardsInfoPosition.regions.Count >= 2 &&
+                 CardsInfoPosition.regions[1].lines.Count >= 3 &&
+                 CardsInfoPosition.regions[1].lines[2].words.Count >= 1)
+            {
+                validdateAux = CardsInfoPosition.regions[1].lines[2].words[0].text;
+            }
+
+            //Filling 'logoAux'
+            if ( CardsInfoPosition.regions.Count >= 2 &&
+                CardsInfoPosition.regions[1].lines.Count >= 1 &&
+                CardsInfoPosition.regions[1].lines[0].words.Count >= 2)
+            {
+                logoAux = CardsInfoPosition.regions[1].lines[0].words[1].text;
+            }
+
+            //Filling 'companyAux'
+            if ( CardsInfoPosition.regions.Count >= 2 &&
+                 CardsInfoPosition.regions[1].lines.Count >= 2 &&
+                 CardsInfoPosition.regions[1].lines[0].words.Count >= 2 &&
+                 CardsInfoPosition.regions[1].lines[1].words.Count >= 1)
+            {
+                companyAux = CardsInfoPosition.regions[1].lines[0].words[1].text + " " +
+                             CardsInfoPosition.regions[1].lines[1].words[0].text;
+            }
+
             return new HealthCardInfo
             {
-                Name = teste.regions[0].lines[1].words[0].text + " " +
-                       teste.regions[0].lines[1].words[1].text + " " +
-                       teste.regions[1].lines[3].words[0].text,
-                CardNumber = teste.regions[0].lines[2].words[0].text + " " +
-                             teste.regions[1].lines[4].words[0].text + " " +
-                             teste.regions[1].lines[4].words[1].text,
-                //ValidDate
+                Name = nameAux,
+                CardNumber = cardnumberAux,
+                ValidDate = GetValidDate(validdateAux),
                 //HealthInsurance
-                //Logo
-                Company = teste.regions[1].lines[0].words[1].text + " " +
-                          teste.regions[1].lines[1].words[0].text,
-
-
-                    //SUBSTRING
-                //Name = json.Substring(273, 8) + " " +
-                //       json.Substring(321, 1) + " " +
-                //       json.Substring(880, 4),
-                //CardNumber =
-                //    json.Substring(404, 3) + " " +
-                //    json.Substring(448, 3) + " " +
-                //    json.Substring(969, 6) + " " +
-                //    json.Substring(1017, 3),
-
-                ////ValidDate = json.Substring(),
-                ////HealthInsurance = "Saude Top Enfermaria Nacional Flex",
-                ////Logo = "",
-                //Company =
-                //    json.Substring(616, 8) + " " +
-                //    json.Substring(704, 5),
-
-
+                Logo = logoAux,
+                Company = companyAux,
 
             };
         }
