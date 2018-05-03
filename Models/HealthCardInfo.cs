@@ -49,8 +49,8 @@ namespace API.Models
         /// <param name="eligibility">Eligibility</param>
         public void AddEligibility(EligibilityInfo eligibility)
         {
-            if (Eligibilities is null)
-                Eligibilities = new List<EligibilityInfo>();
+            if (eligibility is null) return;
+            if (Eligibilities is null) Eligibilities = new List<EligibilityInfo>();
 
             Eligibilities.Add(eligibility);
         }

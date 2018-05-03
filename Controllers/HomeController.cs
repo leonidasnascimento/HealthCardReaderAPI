@@ -5,6 +5,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Web.Http.Cors;
 using System.Web.Mvc;
@@ -16,6 +17,11 @@ namespace API.Controllers
     {
         #region HTTP Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
         [HttpPost]
         public string ProcessarImagemAsync(string image)
         {
@@ -33,7 +39,6 @@ namespace API.Controllers
                 var healthCardReader = default(HealthCardReader);
                 var healthCardInfo = default(HealthCardInfo);
                 var healthCareProviderList = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"].Split(',').ToList();
-                
 
                 readData = ImageOCRAsync(bytes);
                 healthCardReader = new HealthCardReaderStrategy().GetHealthCardInstance(readData, healthCareProviderList);
@@ -46,9 +51,6 @@ namespace API.Controllers
 
                 if (!(healthCardInfo is null))
                     return Newtonsoft.Json.JsonConvert.SerializeObject(healthCardInfo);
-
-
-
                 else
                     return "No data found from the given Health Card";
             }
@@ -56,6 +58,24 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="imageUrl"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public string GetImageFromUrl(string imageUrl)
+        {
+            var data = default(byte[]);
+
+            using (var webClient = new WebClient())
+            {
+                data = webClient.DownloadData(imageUrl);
+
+                return ProcessarImagemAsync(Convert.ToBase64String(data));
             }
         }
 
