@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace API.Models
 {
@@ -6,6 +7,12 @@ namespace API.Models
     {
         public string boundingBox { get; set; }
         public string text { get; set; }
+        public int Length { get; internal set; }
+
+        public static implicit operator int(Word v)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class Line

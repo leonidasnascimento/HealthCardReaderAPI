@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace API.Models
@@ -25,6 +26,8 @@ namespace API.Models
         /// <param name="medicalExam">Medical Exam to Check the elegibity</param>
         /// <returns>The information regarding the health card elegibility into a given hospital and medical exam</returns>
         public abstract EligibilityInfo GetHealthCarePlanElegibility(HealthCardInfo healthCardInfo, string hospital, string medicalExam);
+
+        public abstract string GetHealthInsuranceNumber(List<int> logicNumericSequence);
 
         #endregion Abstract Methods
 
