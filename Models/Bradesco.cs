@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Models
 {
@@ -95,35 +96,27 @@ namespace API.Models
             var cardNumber = string.Empty;
             var numAux = 0;
             var wordAux = string.Empty;
+            var indexToRemove = new List<int>();
+            var reindex = false;
 
             for (int countRegions = 0; countRegions < ocrData.regions.Count; countRegions++)
             {
-                //Algorithm optimization -- Only get the lines that has 'words' on the same length than Configuration
-                var linesToDigg = ocrData.regions[countRegions].lines
-                    .Where(line => line.words.Count >= Configuration.CardInsuranceNumberLengthSequence.Count)
-                    .ToList();
-
-                if (linesToDigg is null) continue;
-                if (linesToDigg.Count == 0) continue;
-
-                for (int countLines = 0; countLines < linesToDigg.Count; countLines++)
+                for (int countLines = 0; countLines < ocrData.regions[countRegions].lines.Count; countLines++)
                 {
-                    //In this case, emptying our variables on each new line
-                    cardNumber = string.Empty;
-
-                    foreach (var seqLength in Configuration.CardInsuranceNumberLengthSequence)
+                    for (int countSeq = 0; countSeq < Configuration.CardInsuranceNumberLengthSequence.Count; countSeq++)
                     {
-                        for (int countWords = 0; countWords < linesToDigg[countLines].words.Count; countWords++)
+                        for (int countWords = 0; countWords < ocrData.regions[countRegions].lines[countLines].words.Count; countWords++)
                         {
                             wordAux = ocrData.regions[countRegions].lines[countLines].words[countWords].text;
 
                             //This item can not repeat through the iteration... Foward only!
                             ocrData.regions[countRegions].lines[countLines].words[countWords].text = string.Empty;
 
-                            if (wordAux.Length == seqLength)
+                            if (wordAux.Length == Configuration.CardInsuranceNumberLengthSequence[countSeq])
                             {
                                 if (int.TryParse(wordAux, out numAux))
                                 {
+                                    indexToRemove.Add(countSeq);
                                     cardNumber += wordAux;
                                     break;
                                 }
@@ -137,9 +130,13 @@ namespace API.Models
                         if (ocrData.regions[countRegions].lines[countLines].words.Count == 0) break;
                     }
 
-                    //Brakdown condition (found a match, found the number)
-                    if (cardNumber.Length == Configuration.CardInsuranceNumberLengthSequence.Sum())
-                        return cardNumber;
+                    if (indexToRemove.Count > 0)
+                    {
+                        for (int countIndexRemove = 0; countIndexRemove < indexToRemove.Count; countIndexRemove++)
+                            Configuration.CardInsuranceNumberLengthSequence[countIndexRemove] = -1;
+
+                        indexToRemove = new List<int>();
+                    }
                 }
             }
 
@@ -147,6 +144,5 @@ namespace API.Models
         }
 
         #endregion Internal Methods
-
     }
 }
