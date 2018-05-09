@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.Configuration;
+using System.Linq;
 
 namespace API.Models
 {
@@ -9,6 +9,15 @@ namespace API.Models
     /// </summary>
     public abstract class HealthCardReader
     {
+        #region Internal Properties
+
+        /// <summary>
+        /// Set of configuration for the reading process
+        /// </summary>
+        internal HealthCardReaderConfiguration Configuration { get; set; }
+
+        #endregion Internal Properties
+
         #region Abstract Methods
 
         /// <summary>
@@ -27,7 +36,11 @@ namespace API.Models
         /// <returns>The information regarding the health card elegibility into a given hospital and medical exam</returns>
         public abstract EligibilityInfo GetHealthCarePlanElegibility(HealthCardInfo healthCardInfo, string hospital, string medicalExam);
 
-        public abstract string GetHealthInsuranceNumber(List<int> logicNumericSequence);
+        /// <summary>
+        /// Gets the health card insurance-number given
+        /// </summary>
+        /// <returns>The health card insurance number</returns>
+        internal abstract string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData);
 
         #endregion Abstract Methods
 
@@ -69,5 +82,45 @@ namespace API.Models
         }
 
         #endregion Internal Methods
+
+        #region Public Methods
+
+        /// <summary>
+        /// Load the configurations for a given reader
+        /// </summary>
+        public void LoadConfiguration<TReader>() where TReader : HealthCardReader
+        {
+            try
+            {
+                Configuration = new HealthCardReaderConfiguration();
+
+                if (typeof(TReader).Equals(typeof(Bradesco)))
+                {
+                    if (!ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO")) return;
+
+                    //Getting a list of int from a list of string
+                    Configuration.CardInsuranceNumberLengthSequence = ConfigurationManager.AppSettings["CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO"]
+                        .Split(',')
+                        .Select(x => int.Parse(x))
+                        .ToList();
+                }
+                else if (typeof(TReader).Equals(typeof(SulAmerica)))
+                {
+                    if (!ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_SULAMERICA")) return;
+
+                    //Getting a list of int from a list of string
+                    Configuration.CardInsuranceNumberLengthSequence = ConfigurationManager.AppSettings["CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_SULAMERICA"]
+                        .Split(',')
+                        .Select(x => int.Parse(x))
+                        .ToList();
+                }
+            }
+            catch (Exception)
+            {
+                Configuration = null;
+            }
+        }
+
+        #endregion Public Methods
     }
 }

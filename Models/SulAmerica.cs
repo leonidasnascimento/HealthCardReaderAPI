@@ -10,7 +10,7 @@ namespace API.Models
             return new EligibilityInfo();
         }
 
-        public override string GetHealthInsuranceNumber(List<int> logicNumericSequence)
+        internal override string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData)
         {
             throw new NotImplementedException();
         }

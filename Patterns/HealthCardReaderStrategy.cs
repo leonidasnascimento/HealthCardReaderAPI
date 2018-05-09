@@ -21,6 +21,7 @@ namespace API.Patterns
             if (string.IsNullOrWhiteSpace(ocrJsonData)) return null; //Can not proceed with empty OCR result
             if (acceptedHealthCareProviders.Count <= 0) return null; //Whether there is no accepted health care providers, no reason to proceed also.
 
+            var readerInstance = default(HealthCardReader);
             var foundHealthCareProvider = string.Empty;
 
             for (int i = 0; i < acceptedHealthCareProviders.Count; i++)
@@ -35,15 +36,21 @@ namespace API.Patterns
             switch (foundHealthCareProvider.ToLowerInvariant())
             {
                 case "bradesco":
-                    return new Bradesco();
+                    readerInstance = new Bradesco();
+                    readerInstance.LoadConfiguration<Bradesco>();
+                    break;
                 case "sulamerica":
                 case "sulamérica":
                 case "sul américa":
                 case "sul america":
-                    return new SulAmerica();
+                    readerInstance = new SulAmerica();
+                    readerInstance.LoadConfiguration<SulAmerica>();
+                    break;
                 default:
                     return null;
             }
+
+            return readerInstance;
         }
     }
 }

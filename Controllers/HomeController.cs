@@ -111,7 +111,7 @@ namespace API.Controllers
             var defaultLang = ConfigurationManager.AppSettings["COMPUTER_VISION_DEFAULT_LANGUAGE"];
             var cvSubscriptionKey = ConfigurationManager.AppSettings["COMPUTER_VISION_SUBSCRIPTION_KEY"];
             var client = new HttpClient();
-            var fullUrl = string.Format(compVisionUrl, string.Format("language={0}&detectOrientation=false", defaultLang));
+            var fullUrl = string.Format(compVisionUrl, string.Format("language={0}&detectOrientation=true", defaultLang));
             var byteContent = new ByteArrayContent(imgStream);
 
             byteContent.Headers.Add("Content-Type", "application/octet-stream");
