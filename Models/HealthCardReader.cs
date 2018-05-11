@@ -49,6 +49,7 @@ namespace API.Models
         /// <param name="ocr">OCR Object</param>
         /// <returns>A name containing the insured name</returns>
         public abstract string GetInsuredName(ComputerVisionOCR ocr);
+        public abstract string GetCompanyName1(ComputerVisionOCR ocr);
 
         /// <summary>
         /// Gets the company name from the OCR object
@@ -180,7 +181,13 @@ namespace API.Models
                         .Split(',')
                         .Select(x => int.Parse(x))
                         .ToList();
+                    //Getting the accepted plan
+                    if (ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURE_PLAN_SULAMERICA"))
+                    {
+                        Configuration.AcceptedPlan = ConfigurationManager.AppSettings["CARD_INSURE_PLAN_SULAMERICA"];
+                    }
                 }
+
             }
             catch (Exception)
             {

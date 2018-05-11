@@ -74,6 +74,7 @@ namespace API.Models
         /// <param name="ocr">OCR Position</param>
         /// <param name="startIndex">Start Index</param>
         /// <returns>Company's name</returns>
+        /// 
         public override string GetCompanyName(ComputerVisionOCR ocr, int startIndex)
         {
             //Validation
@@ -158,6 +159,11 @@ namespace API.Models
             }
 
             return string.Empty;
+        }
+
+        public override string GetCompanyName1(ComputerVisionOCR ocr)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion Public Methods
