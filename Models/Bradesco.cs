@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace API.Models
@@ -7,68 +8,59 @@ namespace API.Models
     {
         #region Public Methods
 
+        public Bradesco() : base()
+        {
+
+        }
+
         public override EligibilityInfo GetHealthCarePlanElegibility(HealthCardInfo healthCardInfo, string hospital, string medicalExam)
         {
             return new EligibilityInfo();
         }
 
+        /// <summary>
+        /// Gets the insured name
+        /// </summary>
+        /// <param name="ocr">OCR Object</param>
+        /// <returns>A name containing the insured name</returns>
+        public override string GetInsuredName(ComputerVisionOCR ocr)
+        {
+            //Validation
+            if (ocr is null) return string.Empty;
+            if (ocr.RecognitionResult is null) return string.Empty;
+            if (ocr.RecognitionResult.Lines is null) return string.Empty;
+
+            var foundName = string.Empty;
+            var index = -1;
+
+            //Check if there's a dependent-insered
+            if (ocr.RecognitionResult.Lines.Any(line => "02".Equals(line.Text.Trim())))
+                index = ocr.RecognitionResult.Lines.FindIndex(line => "02".Equals(line.Text.Trim()));
+            else if (ocr.RecognitionResult.Lines.Any(line => "00".Equals(line.Text.Trim()))) //Main insured
+                index = ocr.RecognitionResult.Lines.FindIndex(line => "00".Equals(line.Text.Trim()));
+
+            if (index > 0)
+                foundName = ocr.RecognitionResult.Lines[index - 1].Text;
+
+            return foundName;
+        }
+
         public override HealthCardInfo ReadCardInfo(string json)
         {
+            var expDateIndex = -1;
             var cardInfoPosition = (ComputerVisionOCR)Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
-            var nameAux = string.Empty;
+            var nameAux = GetInsuredName(cardInfoPosition);
             var cardNumberAux = GetHealthCardInsuranceNumber(cardInfoPosition);
-            var validdateAux = string.Empty;
-            var logoAux = string.Empty;
-            var companyAux = string.Empty;
-            var healthinsuranceAux = string.Empty;
-
-            //Filling 'nameAux'
-            if (cardInfoPosition.regions.Count >= 3 &&
-                cardInfoPosition.regions[2].lines.Count >= 1 &&
-                cardInfoPosition.regions[2].lines[0].words != null)
-            {
-                for (int i = 0; i < cardInfoPosition.regions[2].lines[0].words.Count; i++)
-                    nameAux += cardInfoPosition.regions[2].lines[0].words[i].text + " ";
-
-            }
-
-            //Filling 'validdateAux'
-            if (cardInfoPosition.regions.Count >= 4 &&
-                 cardInfoPosition.regions[3].lines.Count >= 4 &&
-                 cardInfoPosition.regions[3].lines[3].words.Count >= 1)
-            {
-                validdateAux = cardInfoPosition.regions[3].lines[3].words[0].text;
-            }
-
-            //Filling 'logoAux'
-            if (cardInfoPosition.regions.Count >= 4 &&
-                cardInfoPosition.regions[3].lines.Count >= 1 &&
-                cardInfoPosition.regions[3].lines[0].words.Count >= 1)
-            {
-                logoAux = cardInfoPosition.regions[3].lines[0].words[0].text;
-            }
-
-            //Filling 'companyAux'
-            if (cardInfoPosition.regions.Count >= 4 &&
-                cardInfoPosition.regions[3].lines.Count >= 1 &&
-                cardInfoPosition.regions[3].lines[0].words.Count >= 1)
-            {
-                companyAux = cardInfoPosition.regions[3].lines[0].words[0].text;
-            }
-
-            //Filling 'healthinsuranceAux'
-            if (cardInfoPosition.regions.Count >= 1 &&
-               cardInfoPosition.regions[0].lines.Count >= 1 &&
-               cardInfoPosition.regions[0].lines[0].words.Count >= 1)
-            {
-                healthinsuranceAux = cardInfoPosition.regions[0].lines[0].words[0].text;
-            }
+            var expirationDateAux = GetExpirationDate(cardInfoPosition, out expDateIndex);
+            var logoAux = "Bradesco Saúde";
+            var companyAux = GetCompanyName(cardInfoPosition, expDateIndex);
+            var healthinsuranceAux = GetHealthInsurancePlan(cardInfoPosition);
 
             return new HealthCardInfo
             {
                 Name = nameAux,
                 CardNumber = cardNumberAux,
-                ValidDate = GetValidDate(validdateAux),
+                ExpirationDate = expirationDateAux,
                 HealthInsurance = healthinsuranceAux,
                 Logo = logoAux,
                 Company = companyAux,
@@ -76,72 +68,101 @@ namespace API.Models
             };
         }
 
-        #endregion Public Methods
+        /// <summary>
+        /// Gets the company name from the OCR object
+        /// </summary>
+        /// <param name="ocr">OCR Position</param>
+        /// <param name="startIndex">Start Index</param>
+        /// <returns>Company's name</returns>
+        public override string GetCompanyName(ComputerVisionOCR ocr, int startIndex)
+        {
+            //Validation
+            if (ocr is null) return string.Empty;
+            if (ocr.RecognitionResult is null) return string.Empty;
+            if (ocr.RecognitionResult.Lines is null) return string.Empty;
+            if (startIndex <= 0) return string.Empty;
 
-        #region Internal Methods
+            var companyName = ocr.RecognitionResult.Lines[startIndex - 1].Text;
+
+            return companyName;
+        }
 
         /// <summary>
-        /// Gets the health card insurance-number given
+        /// Get the 'Valid Date' field value given a string
         /// </summary>
-        /// <returns>The health card insurance number</returns>
-        internal override string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData)
+        /// <param name="healthInsuranceDate">Date</param>
+        /// <returns>Valid Date</returns>
+        protected DateTime? GetExpirationDate(ComputerVisionOCR ocr, out int expDateIndex)
         {
-            //Validations
-            if (Configuration is null) return string.Empty;
-            if (Configuration.CardInsuranceNumberLengthSequence is null) return string.Empty;
-            if (Configuration.CardInsuranceNumberLengthSequence.Count == 0) return string.Empty;
-            if (ocrData is null) return string.Empty;
+            expDateIndex = -1;
 
-            //Filling 'cardnumberAux'
-            var cardNumber = string.Empty;
-            var numAux = 0;
-            var wordAux = string.Empty;
-            var indexToRemove = new List<int>();
-            var reindex = false;
+            //Validation
+            if (ocr is null) return null;
+            if (ocr.RecognitionResult is null) return null;
+            if (ocr.RecognitionResult.Lines is null) return null;
 
-            for (int countRegions = 0; countRegions < ocrData.regions.Count; countRegions++)
+            DateTime? returnDate = null;
+            var index = -1;
+            var foundDate = string.Empty;
+
+            if (ocr.RecognitionResult.Lines.Any(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/")))
+                index = ocr.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/"));
+
+            if (index > 0)
             {
-                for (int countLines = 0; countLines < ocrData.regions[countRegions].lines.Count; countLines++)
+                foundDate = ocr.RecognitionResult.Lines[index].Text;
+
+                if (!string.IsNullOrWhiteSpace(foundDate))
                 {
-                    for (int countSeq = 0; countSeq < Configuration.CardInsuranceNumberLengthSequence.Count; countSeq++)
-                    {
-                        for (int countWords = 0; countWords < ocrData.regions[countRegions].lines[countLines].words.Count; countWords++)
-                        {
-                            wordAux = ocrData.regions[countRegions].lines[countLines].words[countWords].text;
+                    expDateIndex = index;
 
-                            //This item can not repeat through the iteration... Foward only!
-                            ocrData.regions[countRegions].lines[countLines].words[countWords].text = string.Empty;
+                    if (foundDate.Split('/').Length == 2)
+                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[1])), int.Parse(foundDate.Split('/')[0]), GetLastDayOfMonth(int.Parse(foundDate.Split('/')[1]), int.Parse(foundDate.Split('/')[0])));
 
-                            if (wordAux.Length == Configuration.CardInsuranceNumberLengthSequence[countSeq])
-                            {
-                                if (int.TryParse(wordAux, out numAux))
-                                {
-                                    indexToRemove.Add(countSeq);
-                                    cardNumber += wordAux;
-                                    break;
-                                }
-                            }
-                        }
-
-                        //Algorithm optimization -- Removing all empty words
-                        ocrData.regions[countRegions].lines[countLines].words.RemoveAll(word => string.Empty.Equals(word.text));
-
-                        //Goes to the next line if there's any word...
-                        if (ocrData.regions[countRegions].lines[countLines].words.Count == 0) break;
-                    }
-
-                    if (indexToRemove.Count > 0)
-                    {
-                        for (int countIndexRemove = 0; countIndexRemove < indexToRemove.Count; countIndexRemove++)
-                            Configuration.CardInsuranceNumberLengthSequence[countIndexRemove] = -1;
-
-                        indexToRemove = new List<int>();
-                    }
+                    if (foundDate.Split('/').Length == 3)
+                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[2])), int.Parse(foundDate.Split('/')[1]), int.Parse(foundDate.Split('/')[0]));
                 }
             }
 
-            return cardNumber;
+            return returnDate;
         }
+
+        public override string GetHealthInsurancePlan(ComputerVisionOCR ocr)
+        {
+            //Validation
+            if (ocr is null) return null;
+            if (ocr.RecognitionResult is null) return null;
+            if (ocr.RecognitionResult.Lines is null) return null;
+            if (Configuration is null) return string.Empty;
+            if (string.IsNullOrWhiteSpace(Configuration.AcceptedPlan)) return string.Empty;
+
+            var acceptedPlans = Configuration.AcceptedPlan.Split(',');
+            var lstPlansAux = new List<string>();
+            var index = -1;
+
+            foreach (var plan in acceptedPlans)
+            {
+                lstPlansAux = ocr.RecognitionResult.Lines
+                    .Where(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()))
+                    .Select(line => line.Text)
+                    .ToList();
+
+                if (lstPlansAux is null) continue;
+                if (lstPlansAux.Count > 1) continue;
+
+                index = ocr.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()));
+
+                if (index <= 0) continue;
+
+                return string.Concat(ocr.RecognitionResult.Lines[index].Text, " ", ocr.RecognitionResult.Lines[index - 1].Text);
+            }
+
+            return string.Empty;
+        }
+
+        #endregion Public Methods
+
+        #region Internal Methods
 
         #endregion Internal Methods
     }

@@ -11,5 +11,10 @@ namespace API.Models
         /// Gets or sets the length of each set of number which compose the health card insurance number
         /// </summary>
         public List<int> CardInsuranceNumberLengthSequence { get; set; }
+
+        /// <summary>
+        /// Gets or sets the accepted plans
+        /// </summary>
+        public string AcceptedPlan { get; set; }
     }
 }

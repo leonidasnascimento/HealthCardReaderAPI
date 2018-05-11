@@ -20,7 +20,7 @@ namespace API.Models
         /// ValidDate represents the last date the card will be valid
         /// </summary>
 
-        public DateTime? ValidDate { get; set; }
+        public DateTime? ExpirationDate { get; set; }
         
         /// <summary>
         /// HealthInsurance represents the type of the Health Insurance

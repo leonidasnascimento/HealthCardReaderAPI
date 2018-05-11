@@ -37,14 +37,12 @@ namespace API.Patterns
             {
                 case "bradesco":
                     readerInstance = new Bradesco();
-                    readerInstance.LoadConfiguration<Bradesco>();
                     break;
                 case "sulamerica":
                 case "sulamérica":
                 case "sul américa":
                 case "sul america":
                     readerInstance = new SulAmerica();
-                    readerInstance.LoadConfiguration<SulAmerica>();
                     break;
                 default:
                     return null;

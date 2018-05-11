@@ -2,6 +2,7 @@
 using API.Patterns;
 using ImageMagick;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -34,13 +35,15 @@ namespace API.Controllers
 
             try
             {
-                var readData = default(string);
+                var readData = string.Empty;
+                var recognizeTextResponse = string.Empty;
                 var bytes = Convert.FromBase64String(image);
                 var healthCardReader = default(HealthCardReader);
                 var healthCardInfo = default(HealthCardInfo);
                 var healthCareProviderList = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"].Split(',').ToList();
 
-                readData = ImageOCRAsync(bytes);
+                recognizeTextResponse = PostImageForOCR(bytes);
+                readData = GetOCRResponse(recognizeTextResponse);
                 healthCardReader = new HealthCardReaderStrategy().GetHealthCardInstance(readData, healthCareProviderList);
 
                 if (!(healthCardReader is null)) //Getting the "first" health card informations
@@ -105,20 +108,84 @@ namespace API.Controllers
         /// </summary>
         /// <param name="imgStream">Image in stream</param>
         /// <returns></returns>
-        private string ImageOCRAsync(byte[] imgStream)
+        private string PostImageForOCR(byte[] imgStream)
         {
             var compVisionUrl = ConfigurationManager.AppSettings["COMPUTER_VISION_URL"];
             var defaultLang = ConfigurationManager.AppSettings["COMPUTER_VISION_DEFAULT_LANGUAGE"];
             var cvSubscriptionKey = ConfigurationManager.AppSettings["COMPUTER_VISION_SUBSCRIPTION_KEY"];
-            var client = new HttpClient();
-            var fullUrl = string.Format(compVisionUrl, string.Format("language={0}&detectOrientation=true", defaultLang));
             var byteContent = new ByteArrayContent(imgStream);
 
             byteContent.Headers.Add("Content-Type", "application/octet-stream");
             byteContent.Headers.Add("Ocp-Apim-Subscription-Key", cvSubscriptionKey);
 
-            var response = client.PostAsync(fullUrl, byteContent).Result;
-            var responseString = response.Content.ReadAsStringAsync().Result;
+            return Post(compVisionUrl, byteContent, true, "Operation-Location");
+        }
+
+        /// <summary>
+        /// Gets the processed image OCR response
+        /// </summary>
+        /// <param name="url">Service URL</param>
+        /// <returns>Response JSON</returns>
+        private string GetOCRResponse(string url)
+        {
+            //Wait for the image to be processed
+            System.Threading.Thread.Sleep(3000);
+
+            var response = Get(url, new Dictionary<string, string> { { "Ocp-Apim-Subscription-Key", ConfigurationManager.AppSettings["COMPUTER_VISION_SUBSCRIPTION_KEY"] } });
+
+            return response;
+        }
+
+        /// <summary>
+        /// Post some content to a given service
+        /// </summary>
+        /// <typeparam name="TInputContent">Content Type. MUST be inherited from "HttpContent"</typeparam>
+        /// <param name="url">Service URL</param>
+        /// <param name="inputContent">Content</param>
+        /// <returns>Service's response JSON</returns>
+        private string Post<TInputContent>(string url, TInputContent inputContent, bool returnResponseHeaderContent = false, string headKey = "") where TInputContent : HttpContent
+        {
+            var client = new HttpClient();
+
+            var response = client.PostAsync(url, inputContent).Result;
+            var responseString = string.Empty;
+
+            if (!returnResponseHeaderContent)
+                responseString = response.Content.ReadAsStringAsync().Result;
+            else
+            {
+                if (string.IsNullOrWhiteSpace(headKey))
+                {
+                    foreach (var head in response.Headers)
+                        responseString = string.Concat(responseString, head.Key, ": ", head.Value, Environment.NewLine);
+                }
+                else
+                {
+                    if (response.Headers.Contains(headKey))
+                        responseString = response.Headers.GetValues(headKey).FirstOrDefault();
+                }
+            }
+
+            return responseString;
+        }
+
+        /// <summary>
+        /// Gets some content from a given service
+        /// </summary>
+        /// <param name="url">Service URL</param>
+        /// <param name="headerCollection">Request header collection</param>
+        /// <returns>Service's response JSON</returns>
+        private string Get(string url, Dictionary<string, string> headerCollection)
+        {
+            var response = default(HttpResponseMessage);
+            var client = new HttpClient();
+            var responseString = string.Empty;
+
+            foreach (var item in headerCollection)
+                client.DefaultRequestHeaders.Add(item.Key, item.Value);
+
+            response = client.GetAsync(url).Result;
+            responseString = response.Content.ReadAsStringAsync().Result;
 
             return responseString;
         }

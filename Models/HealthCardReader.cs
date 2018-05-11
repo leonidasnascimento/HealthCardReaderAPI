@@ -37,36 +37,30 @@ namespace API.Models
         public abstract EligibilityInfo GetHealthCarePlanElegibility(HealthCardInfo healthCardInfo, string hospital, string medicalExam);
 
         /// <summary>
-        /// Gets the health card insurance-number given
+        /// Gets the health care plan
         /// </summary>
-        /// <returns>The health card insurance number</returns>
-        internal abstract string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData);
+        /// <param name="ocr">OCR Object</param>
+        /// <returns>Plan name</returns>
+        public abstract string GetHealthInsurancePlan(ComputerVisionOCR ocr);
+
+        /// <summary>
+        /// Gets the insured name
+        /// </summary>
+        /// <param name="ocr">OCR Object</param>
+        /// <returns>A name containing the insured name</returns>
+        public abstract string GetInsuredName(ComputerVisionOCR ocr);
+
+        /// <summary>
+        /// Gets the company name from the OCR object
+        /// </summary>
+        /// <param name="ocr">OCR Position</param>
+        /// <param name="startIndex">Start Index</param>
+        /// <returns>Company's name</returns>
+        public abstract string GetCompanyName(ComputerVisionOCR ocr, int startIndex);
 
         #endregion Abstract Methods
 
-        #region Internal Methods
-
-        /// <summary>
-        /// Get the 'Valid Date' field value given a string
-        /// </summary>
-        /// <param name="healthInsuranceDate">Date</param>
-        /// <returns>Valid Date</returns>
-        protected DateTime? GetValidDate(string healthInsuranceDate)
-        {
-            //Validations
-            if (string.IsNullOrWhiteSpace(healthInsuranceDate)) return default(DateTime);
-            if (healthInsuranceDate.Split('/').Length <= 1) return default(DateTime);
-
-            DateTime? returnDate = null;
-
-            if (healthInsuranceDate.Split('/').Length == 2)
-                returnDate = new DateTime(int.Parse(string.Concat("20", healthInsuranceDate.Split('/')[1])), int.Parse(healthInsuranceDate.Split('/')[0]), GetLastDayOfMonth(int.Parse(healthInsuranceDate.Split('/')[1]), int.Parse(healthInsuranceDate.Split('/')[0])));
-
-            if(healthInsuranceDate.Split('/').Length == 3)
-                returnDate = new DateTime(int.Parse(string.Concat("20", healthInsuranceDate.Split('/')[2])), int.Parse(healthInsuranceDate.Split('/')[1]), int.Parse(healthInsuranceDate.Split('/')[0]));
-
-            return returnDate;
-        }
+        #region Protected & Private Methods
 
         /// <summary>
         /// Get the last day in a given month
@@ -81,6 +75,71 @@ namespace API.Models
             return returnDay;
         }
 
+        /// <summary>
+        /// Validates if a given string has only numbers
+        /// </summary>
+        /// <param name="value">Value</param>
+        /// <param name="removeWhiteSpace">Remove white space</param>
+        private bool HasOnlyNumbers(string value)
+        {
+            //Validations
+            if (string.IsNullOrWhiteSpace(value)) return false;
+
+            var numberAux = 0;
+
+            foreach (var word in value.ToCharArray())
+            {
+                if (char.IsWhiteSpace(word)) continue;
+                if (int.TryParse(word.ToString(), out numberAux)) continue;
+
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion Protected & Private Methods
+
+        #region Internal Methods
+
+        /// <summary>
+        /// Gets the health card insurance-number given
+        /// </summary>
+        /// <returns>The health card insurance number</returns>
+        internal virtual string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData)
+        {
+            //Validations
+            if (Configuration is null) return string.Empty;
+            if (Configuration.CardInsuranceNumberLengthSequence is null) return string.Empty;
+            if (Configuration.CardInsuranceNumberLengthSequence.Count == 0) return string.Empty;
+            if (ocrData is null) return string.Empty;
+            if (ocrData.RecognitionResult is null) return string.Empty;
+            if (ocrData.RecognitionResult.Lines is null) return string.Empty;
+
+            //Optimization -- Only lines with length higher than the sum of card number length
+            var lines = ocrData.RecognitionResult.Lines
+                .Where(line => line.Text.Length >= Configuration.CardInsuranceNumberLengthSequence.Sum())
+                .ToList();
+            var cardNumber = string.Empty;
+
+            if (lines is null) return string.Empty;
+            if (lines.Count == 0) return string.Empty;
+
+            foreach (var line in lines)
+            {
+                if (HasOnlyNumbers(line.Text))
+                {
+                    if (line.Text.Replace(" ", "").Length == Configuration.CardInsuranceNumberLengthSequence.Sum())
+                    {
+                        cardNumber = line.Text.Replace(" ", "");
+                        break;
+                    }
+                }
+            }
+
+            return cardNumber;
+        }
+
         #endregion Internal Methods
 
         #region Public Methods
@@ -88,23 +147,31 @@ namespace API.Models
         /// <summary>
         /// Load the configurations for a given reader
         /// </summary>
-        public void LoadConfiguration<TReader>() where TReader : HealthCardReader
+        public void LoadConfiguration(Type derivedType)
         {
             try
             {
                 Configuration = new HealthCardReaderConfiguration();
 
-                if (typeof(TReader).Equals(typeof(Bradesco)))
+                if (derivedType.Equals(typeof(Bradesco)))
                 {
-                    if (!ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO")) return;
-
                     //Getting a list of int from a list of string
-                    Configuration.CardInsuranceNumberLengthSequence = ConfigurationManager.AppSettings["CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO"]
-                        .Split(',')
-                        .Select(x => int.Parse(x))
-                        .ToList();
+                    if (ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO"))
+                    {
+                        Configuration.CardInsuranceNumberLengthSequence = ConfigurationManager.AppSettings["CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_BRADESCO"]
+                            .Split(',')
+                            .Select(x => int.Parse(x))
+                            .ToList();
+                    }
+
+                    //Getting the accepted plan
+                    if (ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURE_PLAN_BRADESCO"))
+                    {
+                        Configuration.AcceptedPlan = ConfigurationManager.AppSettings["CARD_INSURE_PLAN_BRADESCO"];
+                    }
+
                 }
-                else if (typeof(TReader).Equals(typeof(SulAmerica)))
+                else if (derivedType.Equals(typeof(SulAmerica)))
                 {
                     if (!ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURANCE_NUMBER_LENGTH_SEQUENCE_SULAMERICA")) return;
 
@@ -119,6 +186,14 @@ namespace API.Models
             {
                 Configuration = null;
             }
+        }
+
+        /// <summary>
+        /// Class instance method
+        /// </summary>
+        public HealthCardReader()
+        {
+            LoadConfiguration(GetType());
         }
 
         #endregion Public Methods
