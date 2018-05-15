@@ -50,6 +50,7 @@ namespace API.Models
             {
                 foundName = ocr.RecognitionResult.Lines[0].Text;
                 return foundName;
+
             }return null;
             
         }
@@ -72,8 +73,8 @@ namespace API.Models
             if (ocr.RecognitionResult.Lines is null) return string.Empty;
             
             
-            if (ocr.RecognitionResult.Lines.Any(line => "EMPRESA:".Equals(line.Text.Trim())))
-                startIndex = ocr.RecognitionResult.Lines.FindIndex(line => "EMPRESA:".Equals(line.Text.Trim()));
+            if (ocr.RecognitionResult.Lines.Any(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim())))
+                startIndex = ocr.RecognitionResult.Lines.FindIndex(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim()));
 
             if(startIndex >0 )
             companyName = ocr.RecognitionResult.Lines[startIndex + 1].Text;
