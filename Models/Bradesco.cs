@@ -108,8 +108,8 @@ namespace API.Models
             var index = -1;
             var foundDate = string.Empty;
 
-            if (OCR.RecognitionResult.Lines.Any(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/")))
-                index = OCR.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/"));
+            if (OCR.RecognitionResult.Lines.Any(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/") && line.Text.Split('/').Length == 2))
+                index = OCR.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/") && line.Text.Split('/').Length == 2);
 
             if (index > 0)
             {
@@ -120,10 +120,10 @@ namespace API.Models
                     expDateIndex = index;
 
                     if (foundDate.Split('/').Length == 2)
-                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[1])), int.Parse(foundDate.Split('/')[0]), GetLastDayOfMonth(int.Parse(foundDate.Split('/')[1]), int.Parse(foundDate.Split('/')[0])));
+                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[1].Trim())), int.Parse(foundDate.Split('/')[0].Trim()), GetLastDayOfMonth(int.Parse(foundDate.Split('/')[1].Trim()), int.Parse(foundDate.Split('/')[0].Trim())));
 
                     if (foundDate.Split('/').Length == 3)
-                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[2])), int.Parse(foundDate.Split('/')[1]), int.Parse(foundDate.Split('/')[0]));
+                        returnDate = new DateTime(int.Parse(string.Concat("20", foundDate.Split('/')[2].Trim())), int.Parse(foundDate.Split('/')[1].Trim()), int.Parse(foundDate.Split('/')[0].Trim()));
                 }
             }
 

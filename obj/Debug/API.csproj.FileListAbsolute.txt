@@ -275,3 +275,4 @@ C:\git\HealthCare Readers\HealthCardReaderAPI\bin\System.Web.WebPages.xml
 C:\git\HealthCare Readers\HealthCardReaderAPI\bin\System.Web.WebPages.Deployment.xml
 C:\git\HealthCare Readers\HealthCardReaderAPI\bin\System.Web.WebPages.Razor.xml
 C:\git\HealthCardReader\API\obj\Debug\API.csprojResolveAssemblyReference.cache
+C:\git\HealthCare Readers\HealthCardReaderAPI\bin\Magick.NET-Q8-AnyCPU.dll
