@@ -42,7 +42,7 @@ namespace API.Controllers
                 var healthCardInfo = default(HealthCardInfo);
                 var healthCareProviderList = ConfigurationManager.AppSettings["ACCEPTED_HEALTH_PROVIDERS"].Split(',').ToList();
 
-                recognizeTextResponse = PostImageForOCR(bytes);
+                recognizeTextResponse = PostImageForOCR(ImproveImage(bytes));
                 readData = GetOCRResponse(recognizeTextResponse);
                 healthCardReader = new HealthCardReaderStrategy().GetHealthCardInstance(readData, healthCareProviderList);
 
@@ -61,6 +61,32 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        /// <summary>
+        /// Improves the image
+        /// </summary>
+        /// <param name="inputBytes">Bytes representing an image</param>
+        /// <returns>Improved image bytes</returns>
+        private byte[] ImproveImage(byte[] inputBytes)
+        {
+            try
+            {
+                var image = new MagickImage(inputBytes);
+
+                if (image == null) return inputBytes;
+
+                image.Grayscale(PixelIntensityMethod.Undefined); //Turn it to black and white
+                image.Contrast(true); //Turn up the contrast
+                image.Negate(); //Inverted back and white
+
+                return image.ToByteArray();
+
+            }
+            catch (Exception)
+            {
+                return inputBytes;
             }
         }
 

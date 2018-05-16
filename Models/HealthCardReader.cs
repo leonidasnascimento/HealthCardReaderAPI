@@ -15,6 +15,10 @@ namespace API.Models
         /// Set of configuration for the reading process
         /// </summary>
         internal HealthCardReaderConfiguration Configuration { get; set; }
+        /// <summary>
+        /// Gets or sets the OCR result from JSON
+        /// </summary>
+        internal ComputerVisionOCR OCR { get; set; }
 
         #endregion Internal Properties
 
@@ -41,23 +45,14 @@ namespace API.Models
         /// </summary>
         /// <param name="ocr">OCR Object</param>
         /// <returns>Plan name</returns>
-        public abstract string GetHealthInsurancePlan(ComputerVisionOCR ocr);
+        public abstract string GetHealthInsurancePlan();
 
         /// <summary>
         /// Gets the insured name
         /// </summary>
         /// <param name="ocr">OCR Object</param>
         /// <returns>A name containing the insured name</returns>
-        public abstract string GetInsuredName(ComputerVisionOCR ocr);
-        public abstract string GetCompanyName1(ComputerVisionOCR ocr);
-
-        /// <summary>
-        /// Gets the company name from the OCR object
-        /// </summary>
-        /// <param name="ocr">OCR Position</param>
-        /// <param name="startIndex">Start Index</param>
-        /// <returns>Company's name</returns>
-        public abstract string GetCompanyName(ComputerVisionOCR ocr, int startIndex);
+        public abstract string GetInsuredName();
 
         #endregion Abstract Methods
 
@@ -107,18 +102,18 @@ namespace API.Models
         /// Gets the health card insurance-number given
         /// </summary>
         /// <returns>The health card insurance number</returns>
-        internal virtual string GetHealthCardInsuranceNumber(ComputerVisionOCR ocrData)
+        internal virtual string GetHealthCardInsuranceNumber()
         {
             //Validations
             if (Configuration is null) return string.Empty;
             if (Configuration.CardInsuranceNumberLengthSequence is null) return string.Empty;
             if (Configuration.CardInsuranceNumberLengthSequence.Count == 0) return string.Empty;
-            if (ocrData is null) return string.Empty;
-            if (ocrData.RecognitionResult is null) return string.Empty;
-            if (ocrData.RecognitionResult.Lines is null) return string.Empty;
+            if (OCR is null) return string.Empty;
+            if (OCR.RecognitionResult is null) return string.Empty;
+            if (OCR.RecognitionResult.Lines is null) return string.Empty;
 
             //Optimization -- Only lines with length higher than the sum of card number length
-            var lines = ocrData.RecognitionResult.Lines
+            var lines = OCR.RecognitionResult.Lines
                 .Where(line => line.Text.Length >= Configuration.CardInsuranceNumberLengthSequence.Sum())
                 .ToList();
             var cardNumber = string.Empty;
@@ -139,6 +134,22 @@ namespace API.Models
             }
 
             return cardNumber;
+        }
+
+        /// <summary>
+        /// Method responsible to remove all word that was set to be ignored by reading process
+        /// </summary>
+        internal void RemoveWordsToIgnore()
+        {
+            //Validation
+            if (OCR is null) return;
+            if (OCR.RecognitionResult is null) return;
+            if (OCR.RecognitionResult.Lines is null) return;
+            if (Configuration is null) return;
+            if (Configuration.WordsToIgnore is null) return;
+
+            foreach (var word in Configuration.WordsToIgnore)
+                OCR.RecognitionResult.Lines.RemoveAll(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Equals(word));
         }
 
         #endregion Internal Methods
@@ -171,6 +182,12 @@ namespace API.Models
                         Configuration.AcceptedPlan = ConfigurationManager.AppSettings["CARD_INSURE_PLAN_BRADESCO"];
                     }
 
+                    //Getting the list of words to ignore
+                    if (ConfigurationManager.AppSettings.AllKeys.Contains("CARD_INSURE_WORDS_IGNORE"))
+                    {
+                        Configuration.WordsToIgnore = ConfigurationManager.AppSettings["CARD_INSURE_WORDS_IGNORE"].Split(',').ToList();
+                    }
+
                 }
                 else if (derivedType.Equals(typeof(SulAmerica)))
                 {
@@ -198,9 +215,12 @@ namespace API.Models
         /// <summary>
         /// Class instance method
         /// </summary>
-        public HealthCardReader()
+        public HealthCardReader(string json)
         {
             LoadConfiguration(GetType());
+
+            if (!string.IsNullOrWhiteSpace(json))
+                OCR = (ComputerVisionOCR)Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
         }
 
         #endregion Public Methods

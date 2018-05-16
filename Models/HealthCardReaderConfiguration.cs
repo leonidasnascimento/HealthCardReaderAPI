@@ -16,5 +16,10 @@ namespace API.Models
         /// Gets or sets the accepted plans
         /// </summary>
         public string AcceptedPlan { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of words to ignore
+        /// </summary>
+        public List<string> WordsToIgnore { get; set; }
     }
 }

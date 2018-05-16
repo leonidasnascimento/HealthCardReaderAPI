@@ -5577,6 +5577,15 @@
             <returns>The resulting image of the flatten operation.</returns>
             <exception cref="T:ImageMagick.MagickException">Thrown when an error is raised by ImageMagick.</exception>
         </member>
+        <member name="M:ImageMagick.IMagickImageCollection.Flatten(ImageMagick.MagickColor)">
+            <summary>
+            Flatten this collection into a single image.
+            This is useful for combining Photoshop layers into a single image.
+            </summary>
+            <param name="backgroundColor">The background color of the output image.</param>
+            <returns>The resulting image of the flatten operation.</returns>
+            <exception cref="T:ImageMagick.MagickException">Thrown when an error is raised by ImageMagick.</exception>
+        </member>
         <member name="M:ImageMagick.IMagickImageCollection.Insert(System.Int32,System.String)">
             <summary>
             Inserts an image with the specified file name into the collection.
@@ -10690,6 +10699,14 @@
             <returns>The resulting image of the flatten operation.</returns>
             <exception cref="T:ImageMagick.MagickException">Thrown when an error is raised by ImageMagick.</exception>
         </member>
+        <member name="M:ImageMagick.MagickImageCollection.Flatten(ImageMagick.MagickColor)">
+            <summary>
+            Flatten this collection into a single image.
+            This is useful for combining Photoshop layers into a single image.
+            </summary>
+            <param name="backgroundColor">The background color of the output image.</param>
+            <returns>The resulting image of the flatten operation.</returns>
+        </member>
         <member name="M:ImageMagick.MagickImageCollection.GetEnumerator">
             <summary>
             Returns an enumerator that iterates through the images.
@@ -14649,6 +14666,11 @@
         <member name="P:ImageMagick.PdfReadDefines.FitPage">
             <summary>
             Gets or sets the size where the image should be scaled to (pdf:fit-page).
+            </summary>
+        </member>
+        <member name="P:ImageMagick.PdfReadDefines.Password">
+            <summary>
+            Gets or sets the password that should be used to open the pdf (authenticate).
             </summary>
         </member>
         <member name="P:ImageMagick.PdfReadDefines.UseCropBox">
@@ -19588,11 +19610,6 @@
             Image Clip Mask
             </summary>
         </member>
-        <member name="F:ImageMagick.MagickFormat.Clipboard">
-            <summary>
-            The system clipboard
-            </summary>
-        </member>
         <member name="F:ImageMagick.MagickFormat.Cmyk">
             <summary>
             Raw cyan, magenta, yellow, and black samples
@@ -19673,11 +19690,6 @@
             Microsoft DirectDraw Surface
             </summary>
         </member>
-        <member name="F:ImageMagick.MagickFormat.Emf">
-            <summary>
-            Windows Enhanced Meta File
-            </summary>
-        </member>
         <member name="F:ImageMagick.MagickFormat.Epdf">
             <summary>
             Encapsulated Portable Document Format
@@ -19733,11 +19745,6 @@
             Epson RAW Format
             </summary>
         </member>
-        <member name="F:ImageMagick.MagickFormat.Exr">
-            <summary>
-            High Dynamic-range (HDR)
-            </summary>
-        </member>
         <member name="F:ImageMagick.MagickFormat.Fax">
             <summary>
             Group 3 FAX
@@ -19751,11 +19758,6 @@
         <member name="F:ImageMagick.MagickFormat.Fits">
             <summary>
             Flexible Image Transport System
-            </summary>
-        </member>
-        <member name="F:ImageMagick.MagickFormat.Flif">
-            <summary>
-            Free Lossless Image Format
             </summary>
         </member>
         <member name="F:ImageMagick.MagickFormat.Fractal">
@@ -19823,14 +19825,14 @@
             Identity Hald color lookup table image
             </summary>
         </member>
-        <member name="F:ImageMagick.MagickFormat.Heic">
-            <summary>
-            Apple High Efficiency Image Format
-            </summary>
-        </member>
         <member name="F:ImageMagick.MagickFormat.Hdr">
             <summary>
             Radiance RGBE image format
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Heic">
+            <summary>
+            High Efficiency Image Format
             </summary>
         </member>
         <member name="F:ImageMagick.MagickFormat.Histogram">
@@ -20608,11 +20610,6 @@
             Wireless Bitmap (level 0) image
             </summary>
         </member>
-        <member name="F:ImageMagick.MagickFormat.Wmf">
-            <summary>
-            Windows Meta File
-            </summary>
-        </member>
         <member name="F:ImageMagick.MagickFormat.Wmv">
             <summary>
             Windows Media Video
@@ -20676,6 +20673,31 @@
         <member name="F:ImageMagick.MagickFormat.Yuv">
             <summary>
             CCIR 601 4:1:1 or 4:2:2
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Clipboard">
+            <summary>
+            The system clipboard
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Emf">
+            <summary>
+            Windows Enhanced Meta File
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Exr">
+            <summary>
+            High Dynamic-range (HDR)
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Flif">
+            <summary>
+            Free Lossless Image Format
+            </summary>
+        </member>
+        <member name="F:ImageMagick.MagickFormat.Wmf">
+            <summary>
+            Windows Meta File
             </summary>
         </member>
         <member name="T:ImageMagick.MorphologyMethod">
@@ -22597,6 +22619,13 @@
             <param name="height">The height of the area.</param>
             <param name="values">The values of the pixels.</param>
         </member>
+        <member name="M:ImageMagick.IPixelCollection.SetArea(ImageMagick.MagickGeometry,System.Double[])">
+            <summary>
+            Changes the values of the specified pixels.
+            </summary>
+            <param name="geometry">The geometry of the area.</param>
+            <param name="values">The values of the pixels.</param>
+        </member>
         <member name="M:ImageMagick.IPixelCollection.SetArea(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32[])">
             <summary>
             Changes the values of the specified pixels.
@@ -22607,6 +22636,13 @@
             <param name="height">The height of the area.</param>
             <param name="values">The values of the pixels.</param>
         </member>
+        <member name="M:ImageMagick.IPixelCollection.SetArea(ImageMagick.MagickGeometry,System.Int32[])">
+            <summary>
+            Changes the values of the specified pixels.
+            </summary>
+            <param name="geometry">The geometry of the area.</param>
+            <param name="values">The values of the pixels.</param>
+        </member>
         <member name="M:ImageMagick.IPixelCollection.SetArea(System.Int32,System.Int32,System.Int32,System.Int32,System.Byte[])">
             <summary>
             Changes the values of the specified pixels.
@@ -22615,6 +22651,13 @@
             <param name="y">The Y coordinate of the area.</param>
             <param name="width">The width of the area.</param>
             <param name="height">The height of the area.</param>
+            <param name="values">The values of the pixels.</param>
+        </member>
+        <member name="M:ImageMagick.IPixelCollection.SetArea(ImageMagick.MagickGeometry,System.Byte[])">
+            <summary>
+            Changes the values of the specified pixels.
+            </summary>
+            <param name="geometry">The geometry of the area.</param>
             <param name="values">The values of the pixels.</param>
         </member>
         <member name="M:ImageMagick.IPixelCollection.ToArray">

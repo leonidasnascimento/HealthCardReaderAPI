@@ -6,26 +6,23 @@ namespace API.Models
 {
     public class SulAmerica : HealthCardReader
     {
-        public SulAmerica() : base()
+        public SulAmerica(string json) : base(json)
         {
 
         }
+
         public override EligibilityInfo GetHealthCarePlanElegibility(HealthCardInfo healthCardInfo, string hospital, string medicalExam)
         {
             return new EligibilityInfo();
         }
 
-    
-
         public override HealthCardInfo ReadCardInfo(string json)
         {
-            
-            var cardInfoPosition = (ComputerVisionOCR)Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
-            var nameAux = GetInsuredName(cardInfoPosition);
-            var cardNumberAux = GetHealthCardInsuranceNumber(cardInfoPosition);
+            var nameAux = GetInsuredName();
+            var cardNumberAux = GetHealthCardInsuranceNumber();
             var logoAux = "SulAmérica";
-            var companyAux = GetCompanyName1(cardInfoPosition);
-            var healthinsuranceAux = GetHealthInsurancePlan(cardInfoPosition);
+            var companyAux = GetCompanyName();
+            var healthinsuranceAux = GetHealthInsurancePlan();
 
             return new HealthCardInfo
             {
@@ -37,57 +34,56 @@ namespace API.Models
             };
         }
 
-        public override string GetInsuredName(ComputerVisionOCR ocr)
+        public override string GetInsuredName()
         {
             //Validation
-            if (ocr is null) return string.Empty;
-            if (ocr.RecognitionResult is null) return string.Empty;
-            if (ocr.RecognitionResult.Lines is null) return string.Empty;
+            if (OCR is null) return string.Empty;
+            if (OCR.RecognitionResult is null) return string.Empty;
+            if (OCR.RecognitionResult.Lines is null) return string.Empty;
 
             var foundName = string.Empty;
 
-            if(ocr.RecognitionResult.Lines.Count >= 1)
+            if (OCR.RecognitionResult.Lines.Count >= 1)
             {
-                foundName = ocr.RecognitionResult.Lines[0].Text;
+                foundName = OCR.RecognitionResult.Lines[0].Text;
                 return foundName;
 
-            }return null;
-            
+            }
+            return null;
+
         }
+
         /// <summary>
         /// Gets the company name from the OCR object
         /// </summary>
         /// <param name="ocr">OCR Position</param>
         /// <param name="startIndex">Start Index</param>
         /// <returns>Company's name</returns>
-        /// 
-
-
-        public override string GetCompanyName1(ComputerVisionOCR ocr)
+        public string GetCompanyName()
         {
             var startIndex = 0;
             var companyName = string.Empty;
             //Validation
-            if (ocr is null) return string.Empty;
-            if (ocr.RecognitionResult is null) return string.Empty;
-            if (ocr.RecognitionResult.Lines is null) return string.Empty;
-            
-            
-            if (ocr.RecognitionResult.Lines.Any(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim())))
-                startIndex = ocr.RecognitionResult.Lines.FindIndex(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim()));
+            if (OCR is null) return string.Empty;
+            if (OCR.RecognitionResult is null) return string.Empty;
+            if (OCR.RecognitionResult.Lines is null) return string.Empty;
 
-            if(startIndex >0 )
-            companyName = ocr.RecognitionResult.Lines[startIndex + 1].Text;
+
+            if (OCR.RecognitionResult.Lines.Any(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim())))
+                startIndex = OCR.RecognitionResult.Lines.FindIndex(line => "empresa:".Equals(line.Text.ToLowerInvariant().Trim()));
+
+            if (startIndex > 0)
+                companyName = OCR.RecognitionResult.Lines[startIndex + 1].Text;
 
             return companyName;
         }
 
-        public override string GetHealthInsurancePlan(ComputerVisionOCR ocr)
+        public override string GetHealthInsurancePlan()
         {
             //Validation
-            if (ocr is null) return null;
-            if (ocr.RecognitionResult is null) return null;
-            if (ocr.RecognitionResult.Lines is null) return null;
+            if (OCR is null) return null;
+            if (OCR.RecognitionResult is null) return null;
+            if (OCR.RecognitionResult.Lines is null) return null;
             if (Configuration is null) return string.Empty;
             if (string.IsNullOrWhiteSpace(Configuration.AcceptedPlan)) return string.Empty;
 
@@ -97,7 +93,7 @@ namespace API.Models
 
             foreach (var plan in acceptedPlans)
             {
-                lstPlansAux = ocr.RecognitionResult.Lines
+                lstPlansAux = OCR.RecognitionResult.Lines
                     .Where(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()))
                     .Select(line => line.Text)
                     .ToList();
@@ -105,21 +101,14 @@ namespace API.Models
                 if (lstPlansAux is null) continue;
                 if (lstPlansAux.Count > 1) continue;
 
-                index = ocr.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()));
+                index = OCR.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()));
 
                 if (index <= 0) continue;
 
-                return string.Concat(ocr.RecognitionResult.Lines[index].Text);
+                return string.Concat(OCR.RecognitionResult.Lines[index].Text);
             }
 
             return string.Empty;
-            }
-
-        
-
-        public override string GetCompanyName(ComputerVisionOCR ocr, int startIndex)
-        {
-            throw new NotImplementedException();
         }
     }
 }

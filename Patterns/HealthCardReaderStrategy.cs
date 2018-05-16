@@ -36,13 +36,13 @@ namespace API.Patterns
             switch (foundHealthCareProvider.ToLowerInvariant())
             {
                 case "bradesco":
-                    readerInstance = new Bradesco();
+                    readerInstance = new Bradesco(ocrJsonData);
                     break;
                 case "sulamerica":
                 case "sulamérica":
                 case "sul américa":
                 case "sul america":
-                    readerInstance = new SulAmerica();
+                    readerInstance = new SulAmerica(ocrJsonData);
                     break;
                 default:
                     return null;

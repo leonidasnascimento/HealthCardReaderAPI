@@ -8,7 +8,7 @@ namespace API.Models
     {
         #region Public Methods
 
-        public Bradesco() : base()
+        public Bradesco(string json) : base(json)
         {
 
         }
@@ -23,24 +23,24 @@ namespace API.Models
         /// </summary>
         /// <param name="ocr">OCR Object</param>
         /// <returns>A name containing the insured name</returns>
-        public override string GetInsuredName(ComputerVisionOCR ocr)
+        public override string GetInsuredName()
         {
             //Validation
-            if (ocr is null) return string.Empty;
-            if (ocr.RecognitionResult is null) return string.Empty;
-            if (ocr.RecognitionResult.Lines is null) return string.Empty;
+            if (OCR is null) return string.Empty;
+            if (OCR.RecognitionResult is null) return string.Empty;
+            if (OCR.RecognitionResult.Lines is null) return string.Empty;
 
             var foundName = string.Empty;
             var index = -1;
 
             //Check if there's a dependent-insered
-            if (ocr.RecognitionResult.Lines.Any(line => "02".Equals(line.Text.Trim())))
-                index = ocr.RecognitionResult.Lines.FindIndex(line => "02".Equals(line.Text.Trim()));
-            else if (ocr.RecognitionResult.Lines.Any(line => "00".Equals(line.Text.Trim()))) //Main insured
-                index = ocr.RecognitionResult.Lines.FindIndex(line => "00".Equals(line.Text.Trim()));
+            if (OCR.RecognitionResult.Lines.Any(line => "02".Equals(line.Text.Trim())))
+                index = OCR.RecognitionResult.Lines.FindIndex(line => "02".Equals(line.Text.Trim()));
+            else if (OCR.RecognitionResult.Lines.Any(line => "00".Equals(line.Text.Trim()))) //Main insured
+                index = OCR.RecognitionResult.Lines.FindIndex(line => "00".Equals(line.Text.Trim()));
 
             if (index > 0)
-                foundName = ocr.RecognitionResult.Lines[index - 1].Text;
+                foundName = OCR.RecognitionResult.Lines[index - 1].Text;
 
             return foundName;
         }
@@ -48,13 +48,16 @@ namespace API.Models
         public override HealthCardInfo ReadCardInfo(string json)
         {
             var expDateIndex = -1;
-            var cardInfoPosition = (ComputerVisionOCR)Newtonsoft.Json.JsonConvert.DeserializeObject(json, typeof(ComputerVisionOCR));
-            var nameAux = GetInsuredName(cardInfoPosition);
-            var cardNumberAux = GetHealthCardInsuranceNumber(cardInfoPosition);
-            var expirationDateAux = GetExpirationDate(cardInfoPosition, out expDateIndex);
+
+            //Removing all words that should be ignored
+            RemoveWordsToIgnore();
+
+            var nameAux = GetInsuredName();
+            var cardNumberAux = GetHealthCardInsuranceNumber();
+            var expirationDateAux = GetExpirationDate(out expDateIndex);
             var logoAux = "Bradesco Saúde";
-            var companyAux = GetCompanyName(cardInfoPosition, expDateIndex);
-            var healthinsuranceAux = GetHealthInsurancePlan(cardInfoPosition);
+            var companyAux = GetCompanyName(expDateIndex);
+            var healthinsuranceAux = GetHealthInsurancePlan();
 
             return new HealthCardInfo
             {
@@ -74,16 +77,15 @@ namespace API.Models
         /// <param name="ocr">OCR Position</param>
         /// <param name="startIndex">Start Index</param>
         /// <returns>Company's name</returns>
-        /// 
-        public override string GetCompanyName(ComputerVisionOCR ocr, int startIndex)
+        public string GetCompanyName(int startIndex)
         {
             //Validation
-            if (ocr is null) return string.Empty;
-            if (ocr.RecognitionResult is null) return string.Empty;
-            if (ocr.RecognitionResult.Lines is null) return string.Empty;
+            if (OCR is null) return string.Empty;
+            if (OCR.RecognitionResult is null) return string.Empty;
+            if (OCR.RecognitionResult.Lines is null) return string.Empty;
             if (startIndex <= 0) return string.Empty;
 
-            var companyName = ocr.RecognitionResult.Lines[startIndex - 1].Text;
+            var companyName = OCR.RecognitionResult.Lines[startIndex - 1].Text;
 
             return companyName;
         }
@@ -93,25 +95,25 @@ namespace API.Models
         /// </summary>
         /// <param name="healthInsuranceDate">Date</param>
         /// <returns>Valid Date</returns>
-        protected DateTime? GetExpirationDate(ComputerVisionOCR ocr, out int expDateIndex)
+        protected DateTime? GetExpirationDate(out int expDateIndex)
         {
             expDateIndex = -1;
 
             //Validation
-            if (ocr is null) return null;
-            if (ocr.RecognitionResult is null) return null;
-            if (ocr.RecognitionResult.Lines is null) return null;
+            if (OCR is null) return null;
+            if (OCR.RecognitionResult is null) return null;
+            if (OCR.RecognitionResult.Lines is null) return null;
 
             DateTime? returnDate = null;
             var index = -1;
             var foundDate = string.Empty;
 
-            if (ocr.RecognitionResult.Lines.Any(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/")))
-                index = ocr.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/"));
+            if (OCR.RecognitionResult.Lines.Any(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/")))
+                index = OCR.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.Contains("/"));
 
             if (index > 0)
             {
-                foundDate = ocr.RecognitionResult.Lines[index].Text;
+                foundDate = OCR.RecognitionResult.Lines[index].Text;
 
                 if (!string.IsNullOrWhiteSpace(foundDate))
                 {
@@ -128,12 +130,12 @@ namespace API.Models
             return returnDate;
         }
 
-        public override string GetHealthInsurancePlan(ComputerVisionOCR ocr)
+        public override string GetHealthInsurancePlan()
         {
             //Validation
-            if (ocr is null) return null;
-            if (ocr.RecognitionResult is null) return null;
-            if (ocr.RecognitionResult.Lines is null) return null;
+            if (OCR is null) return null;
+            if (OCR.RecognitionResult is null) return null;
+            if (OCR.RecognitionResult.Lines is null) return null;
             if (Configuration is null) return string.Empty;
             if (string.IsNullOrWhiteSpace(Configuration.AcceptedPlan)) return string.Empty;
 
@@ -143,7 +145,7 @@ namespace API.Models
 
             foreach (var plan in acceptedPlans)
             {
-                lstPlansAux = ocr.RecognitionResult.Lines
+                lstPlansAux = OCR.RecognitionResult.Lines
                     .Where(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()))
                     .Select(line => line.Text)
                     .ToList();
@@ -151,19 +153,14 @@ namespace API.Models
                 if (lstPlansAux is null) continue;
                 if (lstPlansAux.Count > 1) continue;
 
-                index = ocr.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()));
+                index = OCR.RecognitionResult.Lines.FindIndex(line => !string.IsNullOrWhiteSpace(line.Text) && line.Text.ToLowerInvariant().Trim().Contains(plan.ToLowerInvariant()));
 
                 if (index <= 0) continue;
 
-                return string.Concat(ocr.RecognitionResult.Lines[index].Text, " ", ocr.RecognitionResult.Lines[index - 1].Text);
+                return string.Concat(OCR.RecognitionResult.Lines[index].Text, " ", OCR.RecognitionResult.Lines[index - 1].Text);
             }
 
             return string.Empty;
-        }
-
-        public override string GetCompanyName1(ComputerVisionOCR ocr)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion Public Methods
