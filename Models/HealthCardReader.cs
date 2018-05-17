@@ -76,7 +76,7 @@ namespace API.Models
         /// </summary>
         /// <param name="value">Value</param>
         /// <param name="removeWhiteSpace">Remove white space</param>
-        private bool HasOnlyNumbers(string value)
+        protected bool HasOnlyNumbers(string value)
         {
             //Validations
             if (string.IsNullOrWhiteSpace(value)) return false;
@@ -94,6 +94,25 @@ namespace API.Models
             return true;
         }
 
+        /// <summary>
+        /// Validates if a given string has only characters
+        /// </summary>
+        /// <param name="value">Value</param>
+        protected bool HasOnlyCharacters(string value)
+        {
+            //Validations
+            if (string.IsNullOrWhiteSpace(value)) return true;
+
+            var numberAux = 0;
+
+            foreach (var word in value.ToCharArray())
+            {
+                if (char.IsWhiteSpace(word)) continue;
+                if (int.TryParse(word.ToString(), out numberAux)) return false;
+            }
+
+            return true;
+        }
         #endregion Protected & Private Methods
 
         #region Internal Methods

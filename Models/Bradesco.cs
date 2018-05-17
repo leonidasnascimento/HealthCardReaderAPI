@@ -25,6 +25,16 @@ namespace API.Models
         /// <returns>A name containing the insured name</returns>
         public override string GetInsuredName()
         {
+            return GetInsuredName(-1);
+        }
+
+        /// <summary>
+        /// Gets the insured name
+        /// </summary>
+        /// <param name="ocr">OCR Object</param>
+        /// <returns>A name containing the insured name</returns>
+        public string GetInsuredName(int expirationDataIndex)
+        {
             //Validation
             if (OCR is null) return string.Empty;
             if (OCR.RecognitionResult is null) return string.Empty;
@@ -33,6 +43,12 @@ namespace API.Models
             var foundName = string.Empty;
             var index = -1;
 
+            //Replancing "oo" by "00" & "o2" by "02"
+            if (OCR.RecognitionResult.Lines.Any(line => "oo".Equals(line.Text.Trim())))
+                OCR.RecognitionResult.Lines.Where(line => "oo".Equals(line.Text.Trim())).All(line => { line.Text = "00"; return true; });
+            if (OCR.RecognitionResult.Lines.Any(line => "o2".Equals(line.Text.Trim())))
+                OCR.RecognitionResult.Lines.Where(line => "o2".Equals(line.Text.Trim())).All(line => { line.Text = "02"; return true; }); ;
+
             //Check if there's a dependent-insered
             if (OCR.RecognitionResult.Lines.Any(line => "02".Equals(line.Text.Trim())))
                 index = OCR.RecognitionResult.Lines.FindIndex(line => "02".Equals(line.Text.Trim()));
@@ -40,7 +56,25 @@ namespace API.Models
                 index = OCR.RecognitionResult.Lines.FindIndex(line => "00".Equals(line.Text.Trim()));
 
             if (index > 0)
+            {
                 foundName = OCR.RecognitionResult.Lines[index - 1].Text;
+            }
+            else if (expirationDataIndex > 0 && OCR.RecognitionResult.Lines.Count > (expirationDataIndex + 1) && HasOnlyCharacters(OCR.RecognitionResult.Lines[expirationDataIndex + 1].Text))
+            {
+                foundName = OCR.RecognitionResult.Lines[expirationDataIndex + 1].Text;
+            }
+            else
+            {
+                //Looking for a name starting from the end of the OCR
+                for (var countLines = OCR.RecognitionResult.Lines.Count - 1; countLines > 0; countLines--)
+                {
+                    if (HasOnlyCharacters(OCR.RecognitionResult.Lines[countLines].Text))
+                    {
+                        foundName = OCR.RecognitionResult.Lines[countLines].Text;
+                        break;
+                    }
+                }
+            }
 
             return foundName;
         }
@@ -52,9 +86,9 @@ namespace API.Models
             //Removing all words that should be ignored
             RemoveWordsToIgnore();
 
-            var nameAux = GetInsuredName();
-            var cardNumberAux = GetHealthCardInsuranceNumber();
             var expirationDateAux = GetExpirationDate(out expDateIndex);
+            var nameAux = GetInsuredName(expDateIndex);
+            var cardNumberAux = GetHealthCardInsuranceNumber();
             var logoAux = "Bradesco Saúde";
             var companyAux = GetCompanyName(expDateIndex);
             var healthinsuranceAux = GetHealthInsurancePlan();
